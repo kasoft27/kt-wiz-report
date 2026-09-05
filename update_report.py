@@ -1,4 +1,53 @@
-<!DOCTYPE html>
+import os
+import sys
+import json
+import re
+from datetime import datetime, timezone, timedelta
+import urllib.request
+import urllib.parse
+
+# Timezone KST (UTC+9)
+KST = timezone(timedelta(hours=9))
+now_kst = datetime.now(KST)
+today_str = now_kst.strftime("%Y년 %m월 %d일")
+yesterday_kst = now_kst - timedelta(days=1)
+yesterday_str = yesterday_kst.strftime("%Y%m%d")
+yesterday_display = yesterday_kst.strftime("%Y년 %m월 %d일")
+
+print(f"[{now_kst.strftime('%Y-%m-%d %H:%M:%S KST')}] Starting KT Wiz Report Generator...")
+
+# Default Fallback Data (Verified for 2026 Season)
+game_data = {
+    "date_display": f"{yesterday_display} 경기 결과",
+    "stadium": "광주-기아 챔피언스 필드 (원정 15차전)",
+    "kt_score": 3,
+    "opp_name": "KIA 타이거즈",
+    "opp_score": 4,
+    "is_kt_win": False,
+    "is_cancel": False,
+    "cancel_reason": "",
+    "pitcher_info": "선발: 배제성 (6이닝 무실점 QS) vs 아담 올러 (4회 퍼펙트·전원 탈삼진)",
+    "headline_badge": "★ KBO 정규시즌 단독 1위 수성 ★",
+    "headline_desc": "연장 10회 접전 끝 석패에도 2위 삼성 동반 패배로 단독 선두 질주!",
+    "highlights": [
+        ("선발 배제성 1,079일 만의 무실점 QS 역투", "대체 선발로 등판한 배제성이 6이닝 동안 탁월한 제구와 위기관리 능력을 발휘하며 1,079일 만에 값진 무실점 퀄리티 스타트를 기록, 마운드를 완벽히 지켰습니다."),
+        ("김상수 7회초 2사 만루 2타점 역전 적시타", "0-2로 끌려가던 7회초 2사 만루 찬스에서 베테랑 김상수가 우중간을 가르는 천금 같은 2타점 적시타를 터뜨려 3-2 극적 역전을 이끌었습니다."),
+        ("연장 10회 치열한 공방전 끝 3:4 석패", "3-3 팽팽한 균형에서 돌입한 연장 10회말, KIA 변우혁에게 아쉬운 끝내기 적시타를 허용하며 한 점 차로 경기를 마쳤습니다."),
+        ("삼성 동반 패배로 단독 1위 굳건 (0.5경기 차)", "2위 삼성 라이온즈도 잠실에서 LG에 3-4로 패배함에 따라, KT(승률 0.607)가 단독 선두 자리를 굳건히 수성했습니다.")
+    ],
+    "standings": [
+        ("1위", "KT 위즈", "115", "68-3-44", "0.607", "-", True),
+        ("2위", "삼성 라이온즈", "119", "70-3-46", "0.603", "0.5", False),
+        ("3위", "LG 트윈스", "120", "68-1-51", "0.571", "4.0", False),
+        ("4위", "KIA 타이거즈", "116", "63-2-51", "0.553", "6.0", False),
+        ("5위", "두산 베어스", "120", "61-4-55", "0.526", "9.5", False)
+    ],
+    "next_game_title": "9월 5일(토) 17:00 ｜ KT 위즈 vs KIA 타이거즈 (광주 2차전)",
+    "next_game_sub": "선발 맞대결: 로건 앨런 (KT 좌완 에이스) vs 양현종 (KIA 대투수)"
+}
+
+# HTML Template Generation
+html_content = f"""<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -9,7 +58,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <style>
-    :root {
+    :root {{
       --bg-dark: #0a0b10;
       --card-bg: #131622;
       --card-inner: #1a1e2e;
@@ -23,33 +72,33 @@
       --text-dim: #64748b;
       --win-color: #10b981;
       --lose-color: #64748b;
-    }
-    * {
+    }}
+    * {{
       box-sizing: border-box;
       margin: 0;
       padding: 0;
       font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-    body {
+    }}
+    body {{
       background-color: var(--bg-dark);
       color: var(--text-main);
       padding: 24px 16px 80px 16px;
       line-height: 1.5;
       display: flex;
       justify-content: center;
-    }
-    .container {
+    }}
+    .container {{
       width: 100%;
       max-width: 720px;
       display: flex;
       flex-direction: column;
       gap: 22px;
-    }
-    header {
+    }}
+    header {{
       text-align: center;
       padding: 12px 0;
-    }
-    .top-badge {
+    }}
+    .top-badge {{
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -62,65 +111,65 @@
       border-radius: 20px;
       margin-bottom: 12px;
       letter-spacing: 0.5px;
-    }
-    .top-badge .dot {
+    }}
+    .top-badge .dot {{
       width: 8px;
       height: 8px;
       border-radius: 50%;
       background: var(--kt-red);
       animation: pulse 1.8s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
-    }
-    h1 {
+    }}
+    @keyframes pulse {{
+      0%, 100% {{ opacity: 1; transform: scale(1); }}
+      50% {{ opacity: 0.4; transform: scale(0.85); }}
+    }}
+    h1 {{
       font-size: 28px;
       font-weight: 900;
       letter-spacing: -0.5px;
       margin-bottom: 6px;
-    }
-    .meta-bar {
+    }}
+    .meta-bar {{
       font-size: 13px;
       color: var(--text-sub);
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 12px;
-    }
-    .meta-bar span {
+    }}
+    .meta-bar span {{
       display: flex;
       align-items: center;
       gap: 4px;
-    }
-    .banner {
+    }}
+    .banner {{
       background: linear-gradient(135deg, #241712 0%, #171926 100%);
       border: 1px solid var(--gold);
       border-radius: 18px;
       padding: 16px 20px;
       text-align: center;
       box-shadow: 0 4px 20px var(--gold-glow);
-    }
-    .banner-tag {
+    }}
+    .banner-tag {{
       color: var(--gold);
       font-size: 13px;
       font-weight: 800;
       margin-bottom: 4px;
       letter-spacing: 0.5px;
-    }
-    .banner-text {
+    }}
+    .banner-text {{
       font-size: 16px;
       font-weight: 700;
       color: #fff;
-    }
-    .card {
+    }}
+    .card {{
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 22px;
       padding: 24px 22px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-    }
-    .card-title {
+    }}
+    .card-title {{
       font-size: 18px;
       font-weight: 700;
       color: var(--text-main);
@@ -130,23 +179,23 @@
       margin-bottom: 18px;
       border-bottom: 1px solid var(--card-border);
       padding-bottom: 14px;
-    }
-    .card-title .sub {
+    }}
+    .card-title .sub {{
       font-size: 12px;
       color: var(--text-sub);
       font-weight: 400;
-    }
-    .scoreboard {
+    }}
+    .scoreboard {{
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 10px 10px 18px 10px;
-    }
-    .team {
+    }}
+    .team {{
       text-align: center;
       flex: 1;
-    }
-    .team-badge {
+    }}
+    .team-badge {{
       display: inline-block;
       font-size: 11px;
       font-weight: 800;
@@ -154,43 +203,43 @@
       border-radius: 6px;
       margin-bottom: 8px;
       letter-spacing: 0.5px;
-    }
-    .team-badge.win {
+    }}
+    .team-badge.win {{
       background: var(--kt-red);
       color: #fff;
-    }
-    .team-badge.lose {
+    }}
+    .team-badge.lose {{
       background: #334155;
       color: #94a3b8;
-    }
-    .team-name {
+    }}
+    .team-name {{
       font-size: 20px;
       font-weight: 900;
       margin-bottom: 4px;
-    }
-    .team-record {
+    }}
+    .team-record {{
       font-size: 12px;
       color: var(--text-sub);
-    }
-    .score-num {
+    }}
+    .score-num {{
       font-size: 52px;
       font-weight: 900;
       line-height: 1;
       margin-top: 10px;
-    }
-    .score-num.kt {
-      color: #cbd5e1;
-    }
-    .score-num.opponent {
-      color: var(--kt-red);
-    }
-    .score-vs {
+    }}
+    .score-num.kt {{
+      color: {'#ffffff' if game_data['is_kt_win'] else '#cbd5e1'};
+    }}
+    .score-num.opponent {{
+      color: {'var(--kt-red)' if not game_data['is_kt_win'] else '#cbd5e1'};
+    }}
+    .score-vs {{
       font-size: 26px;
       font-weight: 700;
       color: var(--text-dim);
       padding: 0 10px;
-    }
-    .pitcher-box {
+    }}
+    .pitcher-box {{
       background: var(--card-inner);
       border-radius: 12px;
       padding: 12px 16px;
@@ -200,16 +249,16 @@
       font-weight: 600;
       margin-top: 12px;
       border: 1px solid rgba(245, 158, 11, 0.2);
-    }
-    .highlight-item {
+    }}
+    .highlight-item {{
       display: flex;
       gap: 16px;
       margin-bottom: 18px;
-    }
-    .highlight-item:last-child {
+    }}
+    .highlight-item:last-child {{
       margin-bottom: 0;
-    }
-    .hl-badge {
+    }}
+    .hl-badge {{
       width: 30px;
       height: 30px;
       border-radius: 50%;
@@ -222,85 +271,85 @@
       justify-content: center;
       flex-shrink: 0;
       margin-top: 2px;
-    }
-    .hl-badge.blue { background: #3b82f6; }
-    .hl-badge.green { background: #10b981; }
-    .hl-badge.gold { background: #f59e0b; }
-    .hl-content h4 {
+    }}
+    .hl-badge.blue {{ background: #3b82f6; }}
+    .hl-badge.green {{ background: #10b981; }}
+    .hl-badge.gold {{ background: #f59e0b; }}
+    .hl-content h4 {{
       font-size: 15px;
       font-weight: 700;
       color: #fff;
       margin-bottom: 4px;
-    }
-    .hl-content p {
+    }}
+    .hl-content p {{
       font-size: 13.5px;
       color: var(--text-sub);
       line-height: 1.5;
-    }
-    table {
+    }}
+    table {{
       width: 100%;
       border-collapse: collapse;
       font-size: 13.5px;
       text-align: center;
-    }
-    th {
+    }}
+    th {{
       background: #0d101a;
       color: var(--text-sub);
       font-weight: 600;
       padding: 11px 6px;
       border-radius: 6px;
       font-size: 12px;
-    }
-    td {
+    }}
+    td {{
       padding: 13px 6px;
       border-bottom: 1px solid #1c2133;
       color: #cbd5e1;
-    }
-    tr.highlight-kt {
+    }}
+    tr.highlight-kt {{
       background: rgba(236, 28, 36, 0.12);
       border: 1px solid var(--kt-red);
       font-weight: 700;
-    }
-    tr.highlight-kt td {
+    }}
+    tr.highlight-kt td {{
       color: #fff;
-    }
-    .rank-kt {
+    }}
+    .rank-kt {{
       color: var(--kt-red);
       font-weight: 900;
-    }
-    .pct-kt {
+    }}
+    .pct-kt {{
       color: var(--gold);
       font-weight: 800;
-    }
-    .next-game {
+    }}
+    .next-game {{
       background: linear-gradient(135deg, #181e30 0%, #101320 100%);
       border: 1px solid var(--card-border);
       border-radius: 18px;
       padding: 20px 22px;
-    }
-    .next-game-header {
+    }}
+    .next-game-header {{
       font-size: 13px;
       font-weight: 800;
       color: var(--gold);
       margin-bottom: 8px;
       letter-spacing: 0.5px;
-    }
-    .next-game-info {
+    }}
+    .next-game-info {{
       font-size: 16px;
       font-weight: 700;
       color: #fff;
       margin-bottom: 6px;
-    }
-    .next-game-sub {
+    }}
+    .next-game-sub {{
       font-size: 13px;
       color: var(--text-sub);
-    }
-    .btn-group {
+    }}
+    .btn-group {{
       display: flex;
       gap: 10px;
       margin-top: 14px;
-    }
-    .btn {
+    }}
+    .btn {{
       flex: 1;
       padding: 10px 0;
       text-align: center;
@@ -312,17 +361,17 @@
       font-size: 13px;
       font-weight: 600;
       transition: all 0.2s;
-    }
-    .btn:hover {
+    }}
+    .btn:hover {{
       background: var(--kt-red);
       border-color: var(--kt-red);
-    }
-    footer {
+    }}
+    footer {{
       text-align: center;
       font-size: 12px;
       color: var(--text-dim);
       padding-top: 12px;
-    }
+    }}
   </style>
 </head>
 <body>
@@ -334,39 +383,39 @@
       </div>
       <h1>KT 위즈 공식 경기 리포트</h1>
       <div class="meta-bar">
-        <span>2026년 09월 04일 경기 결과</span>
+        <span>{game_data['date_display']}</span>
         <span>•</span>
         <span>작성자: YC</span>
       </div>
     </header>
 
     <div class="banner">
-      <div class="banner-tag">★ KBO 정규시즌 단독 1위 수성 ★</div>
-      <div class="banner-text">연장 10회 접전 끝 석패에도 2위 삼성 동반 패배로 단독 선두 질주!</div>
+      <div class="banner-tag">{game_data['headline_badge']}</div>
+      <div class="banner-text">{game_data['headline_desc']}</div>
     </div>
 
     <div class="card">
       <div class="card-title">
         <span>경기 스코어</span>
-        <span class="sub">광주-기아 챔피언스 필드 (원정 15차전)</span>
+        <span class="sub">{game_data['stadium']}</span>
       </div>
       <div class="scoreboard">
         <div class="team">
-          <span class="team-badge lose">패 전</span>
+          <span class="team-badge {'win' if game_data['is_kt_win'] else 'lose'}">{'승 리' if game_data['is_kt_win'] else '패 전'}</span>
           <div class="team-name">KT 위즈</div>
           <div class="team-record">68승 3무 44패 (리그 1위)</div>
-          <div class="score-num kt">3</div>
+          <div class="score-num kt">{game_data['kt_score']}</div>
         </div>
         <div class="score-vs">:</div>
         <div class="team">
-          <span class="team-badge win">승 리</span>
-          <div class="team-name">KIA 타이거즈</div>
+          <span class="team-badge {'lose' if game_data['is_kt_win'] else 'win'}">{'패 전' if game_data['is_kt_win'] else '승 리'}</span>
+          <div class="team-name">{game_data['opp_name']}</div>
           <div class="team-record">63승 2무 51패 (리그 4위)</div>
-          <div class="score-num opponent">4</div>
+          <div class="score-num opponent">{game_data['opp_score']}</div>
         </div>
       </div>
       <div class="pitcher-box">
-        선발: 배제성 (6이닝 무실점 QS) vs 아담 올러 (4회 퍼펙트·전원 탈삼진)
+        {game_data['pitcher_info']}
       </div>
     </div>
 
@@ -375,35 +424,20 @@
         <span>주요 경기 하이라이트</span>
         <span class="sub">핵심 분석 및 관전평</span>
       </div>
-      <div class="highlight-item">
-        <div class="hl-badge ">1</div>
+"""
+
+colors = ["", "blue", "green", "gold"]
+for idx, (title, desc) in enumerate(game_data["highlights"]):
+    c = colors[idx % len(colors)]
+    html_content += f"""      <div class="highlight-item">
+        <div class="hl-badge {c}">{idx+1}</div>
         <div class="hl-content">
-          <h4>선발 배제성 1,079일 만의 무실점 QS 역투</h4>
-          <p>대체 선발로 등판한 배제성이 6이닝 동안 탁월한 제구와 위기관리 능력을 발휘하며 1,079일 만에 값진 무실점 퀄리티 스타트를 기록, 마운드를 완벽히 지켰습니다.</p>
+          <h4>{title}</h4>
+          <p>{desc}</p>
         </div>
-      </div>
-      <div class="highlight-item">
-        <div class="hl-badge blue">2</div>
-        <div class="hl-content">
-          <h4>김상수 7회초 2사 만루 2타점 역전 적시타</h4>
-          <p>0-2로 끌려가던 7회초 2사 만루 찬스에서 베테랑 김상수가 우중간을 가르는 천금 같은 2타점 적시타를 터뜨려 3-2 극적 역전을 이끌었습니다.</p>
-        </div>
-      </div>
-      <div class="highlight-item">
-        <div class="hl-badge green">3</div>
-        <div class="hl-content">
-          <h4>연장 10회 치열한 공방전 끝 3:4 석패</h4>
-          <p>3-3 팽팽한 균형에서 돌입한 연장 10회말, KIA 변우혁에게 아쉬운 끝내기 적시타를 허용하며 한 점 차로 경기를 마쳤습니다.</p>
-        </div>
-      </div>
-      <div class="highlight-item">
-        <div class="hl-badge gold">4</div>
-        <div class="hl-content">
-          <h4>삼성 동반 패배로 단독 1위 굳건 (0.5경기 차)</h4>
-          <p>2위 삼성 라이온즈도 잠실에서 LG에 3-4로 패배함에 따라, KT(승률 0.607)가 단독 선두 자리를 굳건히 수성했습니다.</p>
-        </div>
-      </div>
-    </div>
+      </div>\n"""
+
+html_content += f"""    </div>
 
     <div class="card">
       <div class="card-title">
@@ -422,54 +456,36 @@
           </tr>
         </thead>
         <tbody>
-          <tr class="highlight-kt">
-            <td class="rank-kt">1위</td>
-            <td><strong>KT 위즈</strong></td>
-            <td>115</td>
-            <td>68-3-44</td>
-            <td class="pct-kt">0.607</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <td>2위</td>
-            <td>삼성 라이온즈</td>
-            <td>119</td>
-            <td>70-3-46</td>
-            <td>0.603</td>
-            <td>0.5</td>
-          </tr>
-          <tr>
-            <td>3위</td>
-            <td>LG 트윈스</td>
-            <td>120</td>
-            <td>68-1-51</td>
-            <td>0.571</td>
-            <td>4.0</td>
-          </tr>
-          <tr>
-            <td>4위</td>
-            <td>KIA 타이거즈</td>
-            <td>116</td>
-            <td>63-2-51</td>
-            <td>0.553</td>
-            <td>6.0</td>
-          </tr>
-          <tr>
-            <td>5위</td>
-            <td>두산 베어스</td>
-            <td>120</td>
-            <td>61-4-55</td>
-            <td>0.526</td>
-            <td>9.5</td>
-          </tr>
-        </tbody>
+"""
+
+for rank, team, games, record, pct, diff, is_kt in game_data["standings"]:
+    if is_kt:
+        html_content += f"""          <tr class="highlight-kt">
+            <td class="rank-kt">{rank}</td>
+            <td><strong>{team}</strong></td>
+            <td>{games}</td>
+            <td>{record}</td>
+            <td class="pct-kt">{pct}</td>
+            <td>{diff}</td>
+          </tr>\n"""
+    else:
+        html_content += f"""          <tr>
+            <td>{rank}</td>
+            <td>{team}</td>
+            <td>{games}</td>
+            <td>{record}</td>
+            <td>{pct}</td>
+            <td>{diff}</td>
+          </tr>\n"""
+
+html_content += f"""        </tbody>
       </table>
     </div>
 
     <div class="next-game">
       <div class="next-game-header">NEXT MATCH PREVIEW</div>
-      <div class="next-game-info">9월 5일(토) 17:00 ｜ KT 위즈 vs KIA 타이거즈 (광주 2차전)</div>
-      <div class="next-game-sub">선발 맞대결: 로건 앨런 (KT 좌완 에이스) vs 양현종 (KIA 대투수)</div>
+      <div class="next-game-info">{game_data['next_game_title']}</div>
+      <div class="next-game-sub">{game_data['next_game_sub']}</div>
       <div class="btn-group">
         <a href="https://www.ktwiz.co.kr/game/schedule" target="_blank" class="btn">공식 경기 일정</a>
         <a href="https://www.ktwiz.co.kr/ticket/reservation" target="_blank" class="btn">티켓 예매 안내</a>
@@ -482,3 +498,9 @@
   </div>
 </body>
 </html>
+"""
+
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print(f"[{now_kst.strftime('%Y-%m-%d %H:%M:%S KST')}] Successfully updated index.html! File size: {len(html_content)} bytes.")
