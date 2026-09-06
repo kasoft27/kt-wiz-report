@@ -8,6 +8,8 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'index.html'
 
 permissions:
   contents: write
@@ -19,7 +21,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  update-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -43,8 +45,8 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git commit -m "자동 갱신: KT 위즈 최신 경기 결과 및 순위 업데이트" || echo "변경 사항 없음"
-          git push || echo "푸시 건너뜀"
+          git diff --quiet && git diff --staged --quiet || git commit -m "자동 갱신: KT 위즈 최신 경기 결과 및 순위 업데이트"
+          git push || echo "푸시 건너뜀 (권한 필요 시 Settings -> Actions -> General -> Workflow permissions 확인)"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -54,6 +56,13 @@ jobs:
         with:
           path: '.'
 
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
