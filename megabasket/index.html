@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>메가바스켓 후킹 릴스</title>
+<meta name="description" content="외부 릴스 4건 조사 결과를 반영한 메가바스켓 26초 세로형(9:16) 모션그래픽">
+<style>
+@font-face{font-family:"BHS";src:url(fonts/black-han-sans-korean-400-normal.woff2) format("woff2");font-weight:400;font-display:block}
+@font-face{font-family:"BHS";src:url(fonts/black-han-sans-latin-400-normal.woff2) format("woff2");font-weight:400;font-display:block;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Pre";src:url(fonts/Pretendard-Bold.woff2) format("woff2");font-weight:700;font-display:block}
+@font-face{font-family:"Pre";src:url(fonts/Pretendard-ExtraBold.woff2) format("woff2");font-weight:800;font-display:block}
+@font-face{font-family:"Pre";src:url(fonts/Pretendard-Black.woff2) format("woff2");font-weight:900;font-display:block}
+
+:root{
+  --cream:#F4EFE9;--ink:#141414;--red:#E8392B;--yellow:#FFD43B;--blue:#1C7ED6;--muted:#6B625A;
+  --k:.4;
+  --ui-bg:#0F0F10;--ui-fg:#F2F0EC;--ui-dim:#9A958E;--ui-line:#2A2A2C;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--ui-bg);color:var(--ui-fg);font-family:"Pre",system-ui,-apple-system,sans-serif;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;overflow:hidden;padding:12px 16px}
+#viewport{position:relative;width:calc(var(--k)*1080px);height:calc(var(--k)*1920px);border-radius:14px;overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);flex:none}
+#stage{position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:hidden;background:var(--cream);
+  transform:scale(var(--k));transform-origin:0 0;color:var(--ink)}
+body.render{display:block;padding:0;background:#000}
+body.render #viewport{border-radius:0;box-shadow:none}
+body.render #ctrl,body.render #big{display:none}
+
+/* ---------- stage primitives ---------- */
+#cam{position:absolute;inset:0;transform-origin:540px 960px}
+.sc{position:absolute;inset:0;display:none;overflow:hidden}
+.bg{position:absolute;inset:0}
+.a{position:absolute;left:540px;top:960px;transform:translate(-50%,-50%);white-space:nowrap;opacity:0}
+.ic svg,.ic{display:block}
+.ic svg{width:100%;height:100%;overflow:visible}
+.bhs{font-family:"BHS";font-weight:400;line-height:1;letter-spacing:-.01em;padding-top:.08em}
+.p9{font-family:"Pre";font-weight:900;letter-spacing:-.045em;line-height:1.1}
+.p8{font-family:"Pre";font-weight:800;letter-spacing:-.04em;line-height:1.15}
+.p7{font-family:"Pre";font-weight:700;letter-spacing:-.03em;line-height:1.2}
+.pill{font:900 56px/1 "Pre";letter-spacing:-.04em;padding:22px 42px 21px;border-radius:999px}
+.pill.red{background:var(--red);color:#fff}
+.pill.ink{background:var(--ink);color:#fff}
+.pill.yellow{background:var(--yellow);color:var(--ink);border:7px solid var(--ink)}
+.pill.white{background:#fff;color:var(--ink);border:6px solid var(--ink)}
+.chars span{display:inline-block}
+
+/* hook */
+.stamp{font-family:"BHS";font-size:150px;line-height:1;color:var(--red);border:14px solid var(--red);border-radius:30px;
+  padding:30px 46px 16px;background:rgba(232,57,43,.10)}
+.hlbox{background:var(--yellow);color:var(--ink);padding:34px 54px 18px;border-radius:26px;box-shadow:12px 12px 0 var(--ink)}
+.icolab{display:flex;flex-direction:column;align-items:center;gap:6px;font:900 46px/1 "Pre";letter-spacing:-.04em;color:#fff}
+.icolab .ic{width:170px;height:170px}
+
+/* comment bubble */
+.bubble{display:flex;align-items:center;gap:28px;background:#fff;border:6px solid var(--ink);border-radius:48px;
+  padding:30px 44px 30px 32px;box-shadow:0 16px 0 rgba(20,20,20,.18)}
+.av{width:104px;height:104px;border-radius:50%;flex:none;background:conic-gradient(from 200deg,#FFD43B,#E8392B,#C2255C,#FFD43B);padding:7px}
+.av::after{content:"";display:block;width:100%;height:100%;border-radius:50%;background:#E9E3DC url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='40' r='18' fill='%23B8AEA3'/%3E%3Cpath d='M18 92c4-22 18-32 32-32s28 10 32 32z' fill='%23B8AEA3'/%3E%3C/svg%3E") center/100% no-repeat;border:5px solid #fff}
+.bt{display:flex;flex-direction:column;gap:12px}
+.bt i{display:block;width:170px;height:22px;border-radius:11px;background:#DDD6CE}
+.bt b{font:900 84px/1 "Pre";letter-spacing:-.05em}
+.bubble .heart{width:66px;height:66px;margin-left:26px}
+
+/* split */
+.half{position:absolute;left:0;width:1080px;height:960px;overflow:hidden}
+.vs{width:210px;height:210px;border-radius:50%;background:var(--red);border:10px solid var(--ink);color:#fff;
+  font:400 104px/1 "BHS";display:grid;place-items:center;padding-top:14px}
+.okp{font:400 120px/1 "BHS";background:var(--yellow);color:var(--ink);border:10px solid var(--ink);border-radius:999px;
+  padding:34px 64px 18px;box-shadow:10px 10px 0 var(--ink)}
+.stack{display:flex;flex-direction:column;align-items:flex-start;gap:14px}
+
+/* recap card */
+.card{width:930px;background:#fff;border:8px solid var(--ink);border-radius:44px;padding:58px 54px 46px;box-shadow:18px 18px 0 var(--ink);white-space:normal}
+.card .ct{font:400 110px/1 "BHS";text-align:center;margin:0 0 34px;padding-top:10px}
+.row{display:flex;align-items:center;gap:26px;margin:24px 0;opacity:0}
+.row .chk{width:86px;height:86px;flex:none}
+.row .txt{font:900 54px/1.25 "Pre";letter-spacing:-.05em;
+  background:linear-gradient(transparent 56%,var(--yellow) 56%,var(--yellow) 92%,transparent 92%) no-repeat 0 0/0% 100%}
+
+/* CTA */
+.cbox{display:flex;align-items:center;gap:24px;width:900px;background:#fff;border:6px solid var(--ink);border-radius:80px;padding:22px 30px 22px 24px}
+.cbox .av{width:96px;height:96px}
+.ctext{flex:1;font:800 58px/1 "Pre";letter-spacing:-.04em;white-space:nowrap;overflow:hidden}
+.ctext .tag{color:var(--blue)}
+.caret{display:inline-block;width:5px;height:58px;background:var(--ink);vertical-align:-8px;margin-left:4px}
+.cbox .send{width:70px;height:70px;flex:none}
+.rowc{display:flex;align-items:center;gap:22px}
+.info{display:grid;grid-template-columns:auto 1fr;gap:18px 22px;align-items:center;font:800 42px/1.2 "Pre";letter-spacing:-.04em;color:#2b2622}
+.info span:nth-child(odd){font:900 32px/1 "Pre";color:#fff;background:var(--ink);border-radius:12px;padding:10px 16px 9px;letter-spacing:-.02em}
+.chip{display:inline-flex;align-items:center;gap:14px;font:900 48px/1 "Pre";letter-spacing:-.04em;background:#fff;border:6px solid var(--ink);
+  border-radius:999px;padding:16px 34px 15px 18px}
+.chip b{display:grid;place-items:center;width:60px;height:60px;border-radius:50%;background:var(--blue);color:#fff;font:900 38px/1 "Pre"}
+.dots{display:flex;gap:14px;align-items:center}
+.dots i{display:block;width:22px;height:22px;border-radius:11px;background:currentColor;opacity:.35}
+.dots i.on{width:64px;opacity:1}
+.gi{display:flex;flex-direction:column;align-items:center;gap:8px;font:900 52px/1 "Pre";letter-spacing:-.04em}
+.gi .ic{width:230px;height:230px}
+
+/* overlays */
+#wipe,#flash{position:absolute;inset:0;pointer-events:none;display:none}
+#bars{position:absolute;inset:0;pointer-events:none;display:none}
+#bars i{position:absolute;left:0;width:1080px;height:322px}
+#hud{position:absolute;left:0;top:0;width:1080px;height:220px;pointer-events:none;color:var(--ink)}
+#prog{position:absolute;left:40px;right:40px;top:38px;display:flex;gap:8px}
+#prog i{flex:1;height:8px;border-radius:4px;overflow:hidden;background:rgba(127,127,127,.35)}
+#prog b{display:block;height:100%;width:0;background:currentColor}
+#brand{position:absolute;left:58px;right:58px;top:76px;display:flex;justify-content:space-between;align-items:center;opacity:0}
+#brand .bn{font:900 48px/1 "Pre";letter-spacing:-.05em}
+#brand .loc{display:flex;align-items:center;gap:8px;font:800 36px/1 "Pre";letter-spacing:-.04em}
+#brand .loc svg{width:34px;height:34px}
+
+/* ---------- player chrome ---------- */
+#big{position:absolute;inset:0;margin:auto;width:max-content;height:max-content;padding:16px 26px;border-radius:999px;border:0;
+  background:rgba(20,20,20,.82);color:#fff;font:800 18px/1 "Pre";letter-spacing:-.02em;cursor:pointer;backdrop-filter:blur(6px)}
+#big:focus-visible,#ctrl button:focus-visible,#ctrl a:focus-visible,#sc:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
+#ctrl{display:flex;align-items:center;gap:10px;width:calc(var(--k)*1080px);min-width:300px;max-width:100%;flex:none}
+#ctrl button,#ctrl a{flex:none;height:36px;min-width:36px;padding:0 12px;border-radius:10px;border:1px solid var(--ui-line);background:#1A1A1C;
+  color:var(--ui-fg);font:800 14px/34px "Pre";text-decoration:none;cursor:pointer;text-align:center}
+#sc{flex:1;min-width:60px;accent-color:var(--yellow)}
+#tm{flex:none;font:700 12px/1 "Pre";color:var(--ui-dim);font-variant-numeric:tabular-nums;min-width:70px;text-align:right}
+</style>
+</head>
+<body>
+<div id="viewport">
+<div id="stage" aria-label="메가바스켓 26초 세로형 모션그래픽">
+<div id="cam">
+
+  <!-- S1 HOOK -->
+  <section class="sc" id="s1">
+    <div class="bg" style="background:radial-gradient(120% 70% at 50% 46%,#2b2b2b 0%,#141414 62%)"></div>
+    <div class="a burst" id="s1x" data-burst="#ffffff" style="top:960px"></div>
+    <div class="a p8" id="s1a" style="top:690px;font-size:88px;color:#fff">식당 사장님들만 쓰던</div>
+    <div class="a bhs" id="s1b" style="top:925px;font-size:280px;color:var(--yellow)">그 가격</div>
+    <div class="a stamp" id="s1c" style="top:1215px">도매가</div>
+  </section>
+
+  <!-- S2 REVEAL -->
+  <section class="sc" id="s2">
+    <div class="bg" style="background:var(--red)"></div>
+    <div class="a burst" id="s2x" data-burst="#ffffff" style="top:900px"></div>
+    <div class="a p9" id="s2a" style="top:620px;font-size:112px;color:#fff">이제</div>
+    <div class="a bhs" id="s2b" style="top:850px;font-size:240px;color:#fff;text-shadow:0 12px 0 rgba(0,0,0,.18)">일반인도</div>
+    <div class="a bhs hlbox" id="s2c" style="top:1115px;font-size:180px">똑같이!</div>
+    <div class="a icolab" id="s2d" style="top:1395px;left:320px"><div class="ic" data-ic="chef"></div>식당 사장님</div>
+    <div class="a bhs" id="s2e" style="top:1370px;font-size:130px;color:#fff">=</div>
+    <div class="a icolab" id="s2f" style="top:1395px;left:760px"><div class="ic" data-ic="house"></div>우리 집</div>
+  </section>
+
+  <!-- S3 BRAND -->
+  <section class="sc" id="s3">
+    <div class="bg" style="background:var(--cream)"></div>
+    <div class="a burst" id="s3x" data-burst="#FFD43B" style="top:730px"></div>
+    <div class="a ic" id="s3a" data-ic="basket" style="top:720px;width:380px;height:380px"></div>
+    <div class="a bhs chars" id="s3b" style="top:1035px;font-size:180px"><span>메</span><span>가</span><span>바</span><span>스</span><span>켓</span></div>
+    <div class="a p8" id="s3c" style="top:1180px;font-size:50px;color:var(--muted)">광주 매월동 창고형 식자재 할인매장</div>
+    <div class="a pill red" id="s3d" style="top:1310px;font-size:60px">11.2 OPEN</div>
+  </section>
+
+  <!-- S4 Q&A -->
+  <section class="sc" id="s4">
+    <div class="bg" style="background:var(--yellow)"></div>
+    <div class="a bubble" id="s4a" style="top:620px">
+      <div class="av"></div>
+      <div class="bt"><i></i><b>진짜 싸요??</b></div>
+      <div class="ic heart" data-ic="heart"></div>
+    </div>
+    <div class="a p9" id="s4b" style="top:950px;font-size:132px">온라인보다</div>
+    <div class="a bhs" id="s4c" style="top:1180px;font-size:330px;color:var(--red);text-shadow:10px 10px 0 var(--ink)">싸게!</div>
+    <div class="a pill ink" id="s4d" style="top:1400px;font-size:62px">식자재는 도매가격으로</div>
+    <div class="a p7" id="s4e" style="top:1492px;font-size:32px;color:#5C4A00">※ 동일 상품·규격·수량 기준 비교</div>
+  </section>
+
+  <!-- S5 ITEMS -->
+  <section class="sc" id="s5">
+    <div class="bg" id="s5bg"></div>
+    <div class="a pill white" id="s5t" style="top:330px;font-size:54px">업소용 식자재 총출동</div>
+    <div class="a ic" id="s5i0" data-ic="apple" style="top:850px;width:560px;height:560px"></div>
+    <div class="a ic" id="s5i1" data-ic="carrot" style="top:850px;width:560px;height:560px"></div>
+    <div class="a ic" id="s5i2" data-ic="meat" style="top:850px;width:560px;height:560px"></div>
+    <div class="a ic" id="s5i3" data-ic="snow" style="top:850px;width:560px;height:560px"></div>
+    <div class="a ic" id="s5i4" data-ic="can" style="top:850px;width:560px;height:560px"></div>
+    <div class="a ic" id="s5i5" data-ic="sauce" style="top:850px;width:560px;height:560px"></div>
+    <div class="a bhs" id="s5l" style="top:1300px;font-size:220px"></div>
+    <div class="a dots" id="s5d" style="top:1470px"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div id="s5grid"></div>
+    <div class="a bhs" id="s5g" style="top:1430px;font-size:120px">한곳에서 한 번에!</div>
+  </section>
+
+  <!-- S6 BOTH -->
+  <section class="sc" id="s6">
+    <div class="bg" style="background:var(--cream)"></div>
+    <div class="half" id="s6top" style="top:0;background:var(--ink)">
+      <div class="a ic" id="s6a" data-ic="boxes" style="top:560px;left:290px;width:330px;height:330px"></div>
+      <div class="a stack" id="s6b" style="top:560px;left:730px">
+        <div class="bhs" style="font-size:124px;color:#fff">박스 단위</div>
+        <div class="p8" style="font-size:56px;color:var(--yellow)">업소용 · 대용량</div>
+      </div>
+    </div>
+    <div class="half" id="s6bot" style="top:960px;background:var(--cream)">
+      <div class="a ic" id="s6c" data-ic="homebag" style="top:390px;left:800px;width:330px;height:330px"></div>
+      <div class="a stack" id="s6d" style="top:390px;left:350px">
+        <div class="bhs" style="font-size:124px">우리 집</div>
+        <div class="p8" style="font-size:56px;color:var(--red)">오늘 저녁 장보기</div>
+      </div>
+    </div>
+    <div class="a vs" id="s6e" style="top:960px">VS</div>
+    <div class="a okp" id="s6f" style="top:960px">둘 다 OK!</div>
+  </section>
+
+  <!-- S7 WHY -->
+  <section class="sc" id="s7">
+    <div class="bg" style="background:var(--ink)"></div>
+    <div class="a burst" id="s7x" data-burst="#ffffff" style="top:960px"></div>
+    <div class="a p9" id="s7a" style="top:780px;font-size:124px;color:#fff">왜 이렇게</div>
+    <div class="a bhs" id="s7b" style="top:1035px;font-size:380px;color:var(--yellow)">싸?</div>
+    <div class="a pill red" id="s7p" style="top:440px;font-size:52px">이유 01</div>
+    <div class="a ic" id="s7c" data-ic="cardx" style="top:790px;width:470px;height:470px"></div>
+    <div class="a p9" id="s7d" style="top:1110px;font-size:92px;color:#fff">현금·계좌이체 전용</div>
+    <div class="a p7" id="s7e" style="top:1225px;font-size:54px;color:#BDBDBD">카드 결제 비용 아낀 만큼</div>
+    <div class="a ic" id="s7f" data-ic="route" style="top:820px;width:860px;height:300px"></div>
+    <div class="a ic" id="s7g" data-ic="truck" style="top:700px;width:190px;height:190px"></div>
+    <div class="a p9" id="s7h" style="top:1110px;font-size:92px;color:#fff">자체 구매·물류</div>
+    <div class="a p7" id="s7i" style="top:1225px;font-size:54px;color:#BDBDBD">기존 마트 운영 경험까지</div>
+    <div class="a rowc" id="s7j" style="top:1385px"><span class="bhs" style="font-size:170px;color:var(--yellow)">가격</span><div class="ic" id="s7arrow" data-ic="down" style="width:140px;height:160px"></div></div>
+  </section>
+
+  <!-- S8 INFO -->
+  <section class="sc" id="s8">
+    <div class="bg" id="s8bg"></div>
+    <div class="a ic" id="s8m" data-ic="map" style="top:960px;width:1300px;height:2000px"></div>
+    <div class="a bhs" id="s8a" style="top:770px;left:290px;font-size:540px">7</div>
+    <div class="a p9" id="s8b" style="top:720px;font-size:170px">~</div>
+    <div class="a bhs" id="s8c" style="top:770px;left:790px;font-size:540px">8</div>
+    <div class="a p9" id="s8d" style="top:1075px;left:290px;font-size:64px">아침 7시</div>
+    <div class="a p9" id="s8e" style="top:1075px;left:790px;font-size:64px">저녁 8시</div>
+    <div class="a rowc" id="s8f" style="top:1270px;gap:6px"><span class="bhs" id="s8num" style="font-size:200px;color:var(--red)">365</span><span class="p9" style="font-size:92px;color:var(--red);padding-top:60px">일</span></div>
+    <div class="a pill ink" id="s8g" style="top:1440px;font-size:64px">연중무휴</div>
+    <div class="a" id="s8r1" style="top:830px;width:300px;height:96px;border-radius:50%;border:10px solid var(--red)"></div>
+    <div class="a" id="s8r2" style="top:830px;width:300px;height:96px;border-radius:50%;border:10px solid var(--red)"></div>
+    <div class="a ic" id="s8h" data-ic="pin" style="top:690px;width:250px;height:250px"></div>
+    <div class="a bhs" id="s8i" style="top:1010px;font-size:170px">광주 매월동</div>
+    <div class="a p8" id="s8j" style="top:1150px;font-size:62px"><span id="s8addr"></span></div>
+    <div class="a chip" id="s8k" style="top:1290px;left:345px"><b>P</b>매장 앞 주차</div>
+    <div class="a chip" id="s8l" style="top:1290px;left:770px;padding-left:34px">매일 07–20시</div>
+  </section>
+
+  <!-- S9 RECAP -->
+  <section class="sc" id="s9">
+    <div class="bg" style="background:var(--red)"></div>
+    <div class="a burst" id="s9x" data-burst="#ffffff" style="top:1000px"></div>
+    <div class="a card" id="s9a" style="top:1000px">
+      <div class="ct">딱 3개만 기억!</div>
+      <div class="row"><div class="ic chk" data-ic="check"></div><span class="txt">도매가격, 일반인도 똑같이</span></div>
+      <div class="row"><div class="ic chk" data-ic="check"></div><span class="txt">현금·계좌이체 전용</span></div>
+      <div class="row"><div class="ic chk" data-ic="check"></div><span class="txt">매월동 · 아침7시~저녁8시</span></div>
+    </div>
+  </section>
+
+  <!-- S10 CTA + END -->
+  <section class="sc" id="s10">
+    <div class="bg" style="background:var(--cream)"></div>
+    <div class="a cbox" id="s10a" style="top:600px">
+      <div class="av"></div>
+      <div class="ctext"><span class="tag" id="s10tag"></span><span id="s10rest"></span><i class="caret" id="s10car"></i></div>
+      <div class="ic send" data-ic="send"></div>
+    </div>
+    <div class="a p9" id="s10b" style="top:870px;font-size:112px">같이 갈 사람</div>
+    <div class="a bhs" id="s10c" style="top:1090px;font-size:300px;color:var(--red);text-shadow:10px 10px 0 var(--ink)">태그!</div>
+    <div class="a rowc" id="s10d" style="top:1335px"><div class="ic" data-ic="bookmark" style="width:96px;height:96px"></div><span class="p9" style="font-size:68px">주소 저장해두기</span></div>
+    <div class="a ic" id="s10e" data-ic="basket" style="top:560px;width:240px;height:240px"></div>
+    <div class="a bhs" id="s10f" style="top:805px;font-size:170px;color:var(--red)">메가바스켓</div>
+    <div class="a p9" id="s10g" style="top:940px;font-size:58px">광주 매월동 · 11.2 OPEN</div>
+    <div class="a info" id="s10h" style="top:1150px">
+      <span>주소</span><span>광주 서구 매월1로49번길 10</span>
+      <span>영업</span><span>매일 07:00–20:00 · 연중무휴</span>
+      <span>결제</span><span>현금·계좌이체 전용 · 현금영수증 발행</span>
+    </div>
+    <div class="a pill yellow" id="s10i" style="top:1395px;font-size:60px">도매가격, 일반인도 똑같이!</div>
+  </section>
+
+</div>
+<div id="wipe"></div>
+<div id="bars"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div id="flash"></div>
+<div id="hud">
+  <div id="prog"></div>
+  <div id="brand"><span class="bn">메가바스켓</span><span class="loc"><span class="ic" data-ic="pinsmall"></span>광주 매월동</span></div>
+</div>
+</div>
+<button id="big" type="button">▶ 재생 (소리 켜짐)</button>
+</div>
+<div id="ctrl">
+  <button id="pp" type="button" aria-label="재생 또는 일시정지">▶</button>
+  <button id="rs" type="button" aria-label="처음부터">↺</button>
+  <input id="sc" type="range" min="0" max="26" step="0.0333" value="0" aria-label="재생 위치">
+  <span id="tm">0.0 / 26.0s</span>
+  <a id="dl" href="megabasket_hook_reel_26s.mp4" download>MP4</a>
+</div>
+<audio id="snd" src="megabasket_hook_reel_26s.m4a" preload="auto"></audio>
+
+<script>
+/* =========================================================
+   메가바스켓 후킹 릴스 · 26초 · 1080×1920 · 30fps
+   - render(t)는 시간 t(초)만으로 화면 전체를 결정하는 순수 함수입니다.
+   - 플레이어 모드: 오디오 시간에 맞춰 재생. 렌더 모드(?render=1): window.__seek(t)로 프레임 단위 캡처.
+   ========================================================= */
+const D = 26.0, FPS = 30;
+const $ = id => document.getElementById(id);
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const P = (t, a, d) => clamp((t - a) / d);
+const E = {
+  outCubic: p => 1 - Math.pow(1 - p, 3),
+  inCubic: p => p * p * p,
+  inOutCubic: p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2,
+  outExpo: p => p >= 1 ? 1 : 1 - Math.pow(2, -10 * p),
+  outBack: p => { const c1 = 2.2, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); },
+  outBounce: p => { const n = 7.5625, d = 2.75;
+    if (p < 1 / d) return n * p * p; if (p < 2 / d) return n * (p -= 1.5 / d) * p + .75;
+    if (p < 2.5 / d) return n * (p -= 2.25 / d) * p + .9375; return n * (p -= 2.625 / d) * p + .984375; }
+};
+
+/* ---------- icons (inline SVG, ink outline sticker style) ---------- */
+const K = '#141414';
+const ICON = {
+  apple: `<svg viewBox="0 0 200 200"><path d="M100 62c-14-12-50-15-64 14-16 33 5 84 32 94 12 5 22 0 32-2 10 2 20 7 32 2 27-10 48-61 32-94-14-29-50-26-64-14z" fill="#E8392B" stroke="${K}" stroke-width="7" stroke-linejoin="round"/><path d="M100 64c0-14 4-26 12-36" fill="none" stroke="${K}" stroke-width="7" stroke-linecap="round"/><path d="M108 44c10-17 31-21 46-14-6 17-28 25-46 14z" fill="#2F9E44" stroke="${K}" stroke-width="6" stroke-linejoin="round"/><ellipse cx="64" cy="98" rx="9" ry="17" fill="#fff" opacity=".75" transform="rotate(18 64 98)"/></svg>`,
+  carrot: `<svg viewBox="0 0 200 200"><path d="M122 48c20-12 46 4 40 28L70 166c-11 9-27-5-18-16z" fill="#FF8A1F" stroke="${K}" stroke-width="7" stroke-linejoin="round"/><path d="M100 92l16 9M84 116l14 8M68 140l12 7" stroke="${K}" stroke-width="6" stroke-linecap="round"/><path d="M146 50c-3-21 5-36 20-42 5 17-3 34-20 42zM150 56c14-13 32-13 42-5-12 11-30 11-42 5zM142 46c-13-15-13-31-5-42 11 13 11 30 5 42z" fill="#2F9E44" stroke="${K}" stroke-width="6" stroke-linejoin="round"/></svg>`,
+  meat: `<svg viewBox="0 0 200 200"><path d="M34 104c0-40 38-66 82-62 44 4 58 34 51 64-7 33-34 62-80 60-37-2-53-26-53-62z" fill="#FFF3E6" stroke="${K}" stroke-width="7"/><path d="M50 104c0-30 30-50 64-47 34 3 44 26 39 49-6 26-27 47-63 46-28-1-40-21-40-48z" fill="#F0625E"/><path d="M66 112c6-24 28-38 54-35M74 138c18 4 40-2 52-16" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".85"/><circle cx="124" cy="110" r="16" fill="#FFF3E6" stroke="${K}" stroke-width="6"/></svg>`,
+  snow: `<svg viewBox="0 0 200 200"><defs><path id="sf" d="M100 22V178M76 38l24 22 24-22M76 162l24-22 24 22"/></defs><g fill="none" stroke-linecap="round" stroke-linejoin="round"><g stroke="${K}" stroke-width="24"><use href="#sf"/><use href="#sf" transform="rotate(60 100 100)"/><use href="#sf" transform="rotate(120 100 100)"/></g><g stroke="#fff" stroke-width="12"><use href="#sf"/><use href="#sf" transform="rotate(60 100 100)"/><use href="#sf" transform="rotate(120 100 100)"/></g></g></svg>`,
+  can: `<svg viewBox="0 0 200 200"><path d="M50 56v94c0 14 22 24 50 24s50-10 50-24V56" fill="#FFD43B" stroke="${K}" stroke-width="7"/><path d="M50 90c0 11 22 19 50 19s50-8 50-19v38c0 11-22 19-50 19s-50-8-50-19z" fill="#fff" stroke="${K}" stroke-width="6"/><path d="M84 118h32" stroke="#E8392B" stroke-width="10" stroke-linecap="round"/><ellipse cx="100" cy="56" rx="50" ry="17" fill="#DEE2E6" stroke="${K}" stroke-width="7"/><ellipse cx="100" cy="56" rx="24" ry="7" fill="none" stroke="${K}" stroke-width="4"/></svg>`,
+  sauce: `<svg viewBox="0 0 200 200"><path d="M84 34h32v22c0 10 24 20 24 48v58c0 10-8 18-18 18H78c-10 0-18-8-18-18v-58c0-28 24-38 24-48z" fill="#8C2F1B" stroke="${K}" stroke-width="7" stroke-linejoin="round"/><rect x="80" y="16" width="40" height="22" rx="6" fill="#E8392B" stroke="${K}" stroke-width="6"/><rect x="70" y="104" width="60" height="48" rx="9" fill="#FFD43B" stroke="${K}" stroke-width="5"/><path d="M86 128h28" stroke="${K}" stroke-width="6" stroke-linecap="round"/><path d="M74 78c4-8 10-12 14-14" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".6" fill="none"/></svg>`,
+  basket: `<svg viewBox="0 0 200 200"><path d="M58 88Q100 14 142 88" fill="none" stroke="${K}" stroke-width="11" stroke-linecap="round"/><circle cx="76" cy="80" r="21" fill="#E8392B" stroke="${K}" stroke-width="6"/><circle cx="122" cy="76" r="23" fill="#FFD43B" stroke="${K}" stroke-width="6"/><path d="M98 82c-6-26 6-44 22-50 2 20-8 38-22 50z" fill="#2F9E44" stroke="${K}" stroke-width="6" stroke-linejoin="round"/><path d="M28 92h144l-17 80c-2 8-8 12-16 12H61c-8 0-14-4-16-12z" fill="#E8392B" stroke="${K}" stroke-width="8" stroke-linejoin="round"/><path d="M20 90h160" stroke="${K}" stroke-width="13" stroke-linecap="round"/><path d="M72 114v48M100 114v48M128 114v48" stroke="#fff" stroke-width="9" stroke-linecap="round"/></svg>`,
+  chef: `<svg viewBox="0 0 200 200"><path d="M58 124c-24-4-32-38-9-51 2-26 32-38 52-21 17-19 50-10 52 15 25 4 27 42 4 49v34H58z" fill="#fff" stroke="${K}" stroke-width="8" stroke-linejoin="round"/><path d="M58 150h98" stroke="${K}" stroke-width="8"/><path d="M84 124v20M108 124v20M132 124v20" stroke="${K}" stroke-width="6" stroke-linecap="round" opacity=".5"/></svg>`,
+  house: `<svg viewBox="0 0 200 200"><path d="M46 96v80h108V96" fill="#fff" stroke="${K}" stroke-width="8" stroke-linejoin="round"/><path d="M26 104 100 38l74 66" fill="none" stroke="${K}" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><rect x="84" y="124" width="34" height="52" rx="4" fill="#FFD43B" stroke="${K}" stroke-width="7"/><path d="M138 52v26" stroke="${K}" stroke-width="12" stroke-linecap="round"/></svg>`,
+  homebag: `<svg viewBox="0 0 200 200"><path d="M40 70h120l-10 112H50z" fill="#fff" stroke="${K}" stroke-width="8" stroke-linejoin="round"/><path d="M74 70c0-30 52-30 52 0" fill="none" stroke="${K}" stroke-width="8" stroke-linecap="round"/><circle cx="78" cy="60" r="18" fill="#E8392B" stroke="${K}" stroke-width="6"/><path d="M110 64c-2-26 10-40 26-44 0 20-12 36-26 44z" fill="#2F9E44" stroke="${K}" stroke-width="6" stroke-linejoin="round"/><path d="M128 66l18-30" stroke="${K}" stroke-width="8" stroke-linecap="round"/><circle cx="150" cy="30" r="10" fill="#FFF3E6" stroke="${K}" stroke-width="5"/><path d="M70 116h60M76 146h48" stroke="#E8392B" stroke-width="10" stroke-linecap="round"/></svg>`,
+  boxes: `<svg viewBox="0 0 200 200"><g stroke="${K}" stroke-width="7" stroke-linejoin="round"><rect x="20" y="104" width="80" height="76" fill="#D9A066"/><rect x="100" y="104" width="80" height="76" fill="#C98E52"/><rect x="58" y="30" width="84" height="74" fill="#E2AE74"/></g><g stroke="${K}" stroke-width="6" stroke-linecap="round"><path d="M60 104v24M140 104v24M100 30v22"/></g><path d="M34 160h28M114 160h28M72 84h26" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".7"/></svg>`,
+  heart: `<svg viewBox="0 0 100 100"><path d="M50 86S12 62 12 36c0-14 11-24 24-24 8 0 14 4 14 10 0-6 6-10 14-10 13 0 24 10 24 24 0 26-38 50-38 50z" fill="#E8392B" stroke="${K}" stroke-width="6" stroke-linejoin="round"/></svg>`,
+  cardx: `<svg viewBox="0 0 200 200"><rect x="18" y="48" width="164" height="106" rx="16" fill="#4DABF7" stroke="${K}" stroke-width="7"/><rect x="18" y="70" width="164" height="22" fill="${K}"/><rect x="36" y="110" width="36" height="26" rx="5" fill="#FFD43B" stroke="${K}" stroke-width="5"/><path d="M90 126h70" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".7"/><g fill="none" stroke-linecap="round"><path class="xs" d="M34 34 166 166" stroke="${K}" stroke-width="30"/><path class="xs" d="M166 34 34 166" stroke="${K}" stroke-width="30"/><path class="xs" d="M34 34 166 166" stroke="#E8392B" stroke-width="18"/><path class="xs" d="M166 34 34 166" stroke="#E8392B" stroke-width="18"/></g></svg>`,
+  route: `<svg viewBox="0 0 860 300"><path id="rl" d="M80 110H780" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-dasharray="700" stroke-dashoffset="700"/><g class="nd"><circle cx="80" cy="110" r="30" fill="#E8392B" stroke="#fff" stroke-width="8"/><text x="80" y="230" fill="#fff" font-family="Pre" font-weight="800" font-size="50" text-anchor="middle" letter-spacing="-2">중앙구매</text></g><g class="nd"><circle cx="430" cy="110" r="30" fill="#E8392B" stroke="#fff" stroke-width="8"/><text x="430" y="230" fill="#fff" font-family="Pre" font-weight="800" font-size="50" text-anchor="middle" letter-spacing="-2">물류</text></g><g class="nd"><circle cx="780" cy="110" r="30" fill="#FFD43B" stroke="#fff" stroke-width="8"/><text x="780" y="230" fill="#FFD43B" font-family="Pre" font-weight="900" font-size="50" text-anchor="middle" letter-spacing="-2">매장</text></g></svg>`,
+  truck: `<svg viewBox="0 0 200 200"><rect x="12" y="62" width="110" height="72" rx="8" fill="#FFD43B" stroke="${K}" stroke-width="7"/><path d="M122 82h34l30 28v24h-64z" fill="#E8392B" stroke="${K}" stroke-width="7" stroke-linejoin="round"/><path d="M136 92h18l16 16h-34z" fill="#fff" stroke="${K}" stroke-width="5" stroke-linejoin="round"/><circle cx="50" cy="140" r="17" fill="${K}"/><circle cx="50" cy="140" r="7" fill="#ddd"/><circle cx="152" cy="140" r="17" fill="${K}"/><circle cx="152" cy="140" r="7" fill="#ddd"/></svg>`,
+  down: `<svg viewBox="0 0 140 160"><path d="M70 10v100M24 70l46 46 46-46" fill="none" stroke="#FFD43B" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  pin: `<svg viewBox="0 0 200 200"><path d="M100 190c-6-32-62-64-62-110a62 62 0 0 1 124 0c0 46-56 78-62 110z" fill="#E8392B" stroke="${K}" stroke-width="8" stroke-linejoin="round"/><circle cx="100" cy="80" r="24" fill="#fff" stroke="${K}" stroke-width="7"/></svg>`,
+  pinsmall: `<svg viewBox="0 0 200 200"><path d="M100 190c-6-32-62-64-62-110a62 62 0 0 1 124 0c0 46-56 78-62 110z" fill="currentColor"/><circle cx="100" cy="80" r="26" style="fill:var(--pinhole,#F4EFE9)"/></svg>`,
+  check: `<svg viewBox="0 0 100 100"><rect x="6" y="6" width="88" height="88" rx="20" fill="#fff" stroke="${K}" stroke-width="8"/><path class="ck" d="M24 52l18 18 36-40" fill="none" stroke="#E8392B" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="90" stroke-dashoffset="90"/></svg>`,
+  send: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#1C7ED6"/><path d="M50 72V30M32 46l18-18 18 18" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  bookmark: `<svg viewBox="0 0 100 100"><path d="M24 8h52v84L50 72 24 92z" fill="#FFD43B" stroke="${K}" stroke-width="7" stroke-linejoin="round"/></svg>`,
+  map: (() => {
+    const road = '#E4DACD', minor = '#EBE3D8';
+    return `<svg viewBox="0 0 1300 2000"><rect width="1300" height="2000" fill="#F4EFE9"/>
+      <path d="M-50 1500C250 1380 420 1600 700 1460S1150 1250 1380 1330" fill="none" stroke="#CFE6F2" stroke-width="110" stroke-linecap="round"/>
+      <g fill="none" stroke="${minor}" stroke-width="26"><path d="M0 300H1300M0 560H1300M0 1180H1300M0 1720H1300M220 0V2000M480 0V2000M900 0V2000M1120 0V2000"/></g>
+      <g fill="none" stroke="${road}" stroke-width="54" stroke-linecap="round"><path d="M-40 860H1340M650 -40V2040M-40 120L1340 1500"/></g>
+      <g fill="#ECE4DA"><rect x="250" y="330" width="200" height="200" rx="18"/><rect x="930" y="330" width="160" height="200" rx="18"/><rect x="250" y="1210" width="200" height="220" rx="18"/><rect x="930" y="1000" width="160" height="150" rx="18"/></g></svg>`;
+  })()
+};
+function burstSVG(color) {
+  let d = '';
+  const n = 20;
+  for (let i = 0; i < n; i++) {
+    const a0 = (i / n) * Math.PI * 2, a1 = a0 + Math.PI / n;
+    d += `M0 0L${(Math.cos(a0) * 1600).toFixed(1)} ${(Math.sin(a0) * 1600).toFixed(1)}L${(Math.cos(a1) * 1600).toFixed(1)} ${(Math.sin(a1) * 1600).toFixed(1)}Z`;
+  }
+  return `<svg viewBox="-1600 -1600 3200 3200" width="3200" height="3200"><path d="${d}" fill="${color}"/></svg>`;
+}
+document.querySelectorAll('[data-ic]').forEach(el => { el.innerHTML = ICON[el.dataset.ic]; });
+document.querySelectorAll('[data-burst]').forEach(el => { el.innerHTML = burstSVG(el.dataset.burst); });
+
+/* ---------- data ---------- */
+const ITEMS = [
+  { k: '청과', bg: '#FFD43B', fg: '#141414', dark: 0 },
+  { k: '채소', bg: '#141414', fg: '#FFD43B', dark: 1 },
+  { k: '정육', bg: '#F4EFE9', fg: '#E8392B', dark: 0 },
+  { k: '냉동', bg: '#1C7ED6', fg: '#FFFFFF', dark: 1 },
+  { k: '가공식품', bg: '#E8392B', fg: '#FFFFFF', dark: 1 },
+  { k: '조미료', bg: '#FFD43B', fg: '#141414', dark: 0 }
+];
+const ICS = ['apple', 'carrot', 'meat', 'snow', 'can', 'sauce'];
+const STEP = 0.375; // 120BPM 기준 3/16마디 간격
+// 그리드 생성
+(() => {
+  const g = $('s5grid'), xs = [240, 540, 840], ys = [790, 1110];
+  ITEMS.forEach((it, i) => {
+    const d = document.createElement('div');
+    d.className = 'a gi'; d.id = 'gi' + i;
+    d.style.left = xs[i % 3] + 'px'; d.style.top = ys[Math.floor(i / 3)] + 'px';
+    d.innerHTML = `<div class="ic">${ICON[ICS[i]]}</div>${it.k}`;
+    g.appendChild(d);
+  });
+})();
+
+// 장면 구간 [id, 시작, 끝, 어두운 배경 여부]
+const SC = [
+  ['s1', 0, 1.5, 1], ['s2', 1.5, 3.0, 1], ['s3', 3.0, 4.5, 0], ['s4', 4.5, 6.5, 0], ['s5', 6.5, 10.0, 0],
+  ['s6', 10.0, 12.5, 1], ['s7', 12.5, 16.0, 1], ['s8', 16.0, 19.5, 0], ['s9', 19.5, 22.5, 1], ['s10', 22.5, 26.0, 0]
+];
+// 장면 전환 효과
+const TR = [
+  { t: 1.5, k: 'flash', c: '#ffffff' },
+  { t: 3.0, k: 'circle', c: '#F4EFE9' },
+  { t: 4.5, k: 'whipx' },
+  { t: 6.5, k: 'flash', c: '#ffffff' }, { t: 6.5, k: 'zoom' },
+  { t: 10.0, k: 'whipy' },
+  { t: 12.5, k: 'bars', c: '#141414' },
+  { t: 16.0, k: 'circle', c: '#FFD43B' },
+  { t: 17.5, k: 'whipx' },
+  { t: 19.5, k: 'bars', c: '#E8392B' },
+  { t: 22.5, k: 'circle', c: '#F4EFE9' },
+  { t: 24.5, k: 'zoom' }
+];
+// 효과음 큐 (렌더 스크립트가 그대로 읽어 오디오를 합성) · k = 화면 흔들림 세기
+const CUES = [
+  { t: .02, s: 'pop' }, { t: .25, s: 'slam', k: 1 }, { t: .75, s: 'stamp', k: 1.3 },
+  { t: 1.5, s: 'riser' }, { t: 1.5, s: 'pop' }, { t: 1.75, s: 'slam', k: 1 }, { t: 2.25, s: 'slam', k: .8 },
+  { t: 2.5, s: 'pop' }, { t: 2.625, s: 'pop', p: 1.2 }, { t: 2.75, s: 'pop', p: 1.4 },
+  { t: 3.0, s: 'whoosh' }, { t: 3.16, s: 'thump', k: .5 },
+  ...[0, 1, 2, 3, 4].map(i => ({ t: 3.25 + i * .0625, s: 'tick', p: 1 + i * .1 })),
+  { t: 3.625, s: 'pop' },
+  { t: 4.5, s: 'swish' }, { t: 4.5625, s: 'pop' }, { t: 5.0, s: 'swish' }, { t: 5.25, s: 'slam', k: 1 }, { t: 5.5, s: 'pop' },
+  { t: 6.5, s: 'whoosh' },
+  ...ITEMS.map((_, i) => ({ t: 6.5 + i * STEP, s: 'pop', p: 1 + i * .12 })),
+  ...ITEMS.map((_, i) => ({ t: 8.75 + i * .05, s: 'tick', p: 1 + i * .08 })),
+  { t: 9.125, s: 'slam', k: .5 },
+  { t: 10.0, s: 'swish' }, { t: 10.25, s: 'swish' }, { t: 10.75, s: 'pop' }, { t: 11.25, s: 'slam', k: .9 }, { t: 11.25, s: 'ding' },
+  { t: 12.5, s: 'whoosh' }, { t: 12.5, s: 'pop' }, { t: 12.75, s: 'slam', k: 1 },
+  { t: 13.125, s: 'swish' }, { t: 13.375, s: 'stamp', k: .35 }, { t: 13.4375, s: 'stamp', k: .35 },
+  { t: 13.75, s: 'slam', k: .7 }, { t: 13.75, s: 'cash' },
+  { t: 14.5, s: 'swish' }, { t: 14.625, s: 'pop' }, { t: 14.875, s: 'pop', p: 1.2 }, { t: 15.125, s: 'pop', p: 1.4 },
+  { t: 15.25, s: 'slam', k: .7 }, { t: 15.25, s: 'cash' },
+  { t: 16.0, s: 'whoosh' }, { t: 16.0, s: 'slam', k: .9 }, { t: 16.125, s: 'pop' }, { t: 16.375, s: 'slam', k: .9 },
+  { t: 16.625, s: 'type', d: .375 }, { t: 17.125, s: 'pop' },
+  { t: 17.5, s: 'swish' }, { t: 17.71, s: 'thump', k: .7 }, { t: 17.875, s: 'slam', k: .6 },
+  { t: 18.05, s: 'type', d: .4 }, { t: 18.375, s: 'pop' }, { t: 18.5, s: 'pop', p: 1.2 },
+  { t: 19.5, s: 'whoosh' }, { t: 19.5, s: 'pop' },
+  { t: 20.0625, s: 'ding' }, { t: 20.6875, s: 'ding', p: 1.12 }, { t: 21.3125, s: 'ding', p: 1.26 },
+  { t: 22.5, s: 'whoosh' }, { t: 22.6, s: 'type', d: .6 }, { t: 23.25, s: 'pop' }, { t: 23.375, s: 'slam', k: 1 }, { t: 23.75, s: 'pop' },
+  { t: 24.5, s: 'whoosh' }, { t: 24.625, s: 'slam', k: .6 }, { t: 25.0, s: 'ding' }
+];
+const BED = { start: 1.5, end: 24.5, bpm: 120 };
+const BUMPS = ITEMS.map((_, i) => 6.5 + i * STEP).slice(1);
+
+/* ---------- motion helpers ---------- */
+function M(...a) {
+  const r = { x: 0, y: 0, s: 1, sx: 1, sy: 1, r: 0, o: 1, b: 0 };
+  for (const o of a) {
+    if (!o) continue;
+    r.x += o.x || 0; r.y += o.y || 0; r.r += o.r || 0; r.b += o.b || 0;
+    if (o.s != null) r.s *= o.s; if (o.sx != null) r.sx *= o.sx; if (o.sy != null) r.sy *= o.sy; if (o.o != null) r.o *= o.o;
+  }
+  return r;
+}
+function X(el, o) {
+  if (typeof el === 'string') el = $(el);
+  const s = o.s;
+  el.style.transform = `translate(-50%,-50%) translate(${o.x.toFixed(1)}px,${o.y.toFixed(1)}px) rotate(${o.r.toFixed(2)}deg) scale(${(s * o.sx).toFixed(4)},${(s * o.sy).toFixed(4)})`;
+  el.style.opacity = clamp(o.o).toFixed(3);
+  el.style.filter = o.b > .4 ? `blur(${o.b.toFixed(1)}px)` : '';
+}
+const hide = id => { $(id).style.opacity = 0; };
+const pop = (t, at, d = .3, from = 0) => { const p = P(t, at, d); return { s: lerp(from, 1, E.outBack(p)), o: t >= at ? 1 : 0 }; };
+const slam = (t, at, d = .2, from = 2.4) => { const p = P(t, at, d), e = E.outExpo(p); return { s: lerp(from, 1, e), o: clamp((t - at) / .05), b: (1 - e) * 16 * (t >= at) }; };
+const rise = (t, at, d = .3, dist = 80) => { const p = P(t, at, d), e = E.outExpo(p); return { y: (1 - e) * dist, o: clamp(p * 3) }; };
+const slide = (t, at, d = .3, dist = 1200) => { const p = P(t, at, d), e = E.outExpo(p); return { x: (1 - e) * dist, o: t >= at ? 1 : 0, b: (1 - e) * 26 * (t >= at) }; };
+const outFade = (t, at, d = .15, dy = 0, ds = 0) => { const p = P(t, at, d), e = E.inCubic(p); return { o: 1 - p, y: e * dy, s: 1 + e * ds }; };
+const tilt = (t, at, from, d = .35) => ({ r: (1 - E.outBack(P(t, at, d))) * from });
+const wob = (t, at, amp = 2, f = 9) => ({ r: t > at ? Math.sin((t - at) * f) * amp : 0 });
+const pulse = (t, at, amp = .035, f = 14) => ({ s: t > at ? 1 + Math.sin((t - at) * f) * amp : 1 });
+const spin = (el, t, speed, o = .12, s = 1) => X(el, M({ r: t * speed, o, s }));
+
+/* ---------- scenes (lt = 장면 안의 시간) ---------- */
+const S = {
+  s1(lt) {
+    spin('s1x', lt, 14, .07 + .05 * P(lt, .25, .2));
+    X('s1a', M(rise(lt, -.1, .32, 70)));
+    X('s1b', M(slam(lt, .25, .22, 2.8), pulse(lt, .55, .02, 10)));
+    X('s1c', M({ r: -9 }, slam(lt, .75, .18, 3.4), tilt(lt, .75, -24, .3)));
+  },
+  s2(lt) {
+    spin('s2x', lt, 22, .10);
+    X('s2a', M(pop(lt, 0, .25)));
+    X('s2b', M(slam(lt, .25, .2, 2.4)));
+    X('s2c', M({ r: -3 }, pop(lt, .75, .32), tilt(lt, .75, 14, .4)));
+    X('s2d', M(pop(lt, 1.0, .3), rise(lt, 1.0, .3, 40)));
+    X('s2e', M(pop(lt, 1.125, .25)));
+    X('s2f', M(pop(lt, 1.25, .3), rise(lt, 1.25, .3, 40)));
+  },
+  s3(lt) {
+    X('s3x', M({ r: lt * 18, o: .55 * P(lt, .15, .25) }, pop(lt, .15, .4)));
+    X('s3a', M({ y: (E.outBounce(P(lt, 0, .45)) - 1) * 900 }, wob(lt, .45, 3, 7)));
+    const ch = $('s3b').children;
+    $('s3b').style.opacity = 1; $('s3b').style.transform = 'translate(-50%,-50%)';
+    for (let i = 0; i < ch.length; i++) {
+      const at = .25 + i * .0625, p = P(lt, at, .3);
+      ch[i].style.transform = `translateY(${((1 - E.outExpo(p)) * 70).toFixed(1)}px) scale(${E.outBack(p).toFixed(3)})`;
+      ch[i].style.opacity = lt >= at ? 1 : 0;
+    }
+    X('s3c', M(rise(lt, .5, .3, 40)));
+    X('s3d', M({ r: -4 }, pop(lt, .625, .3), tilt(lt, .625, 10)));
+  },
+  s4(lt) {
+    X('s4a', M(pop(lt, .0625, .32), tilt(lt, .0625, -8), wob(lt, .45, 1.2, 6)));
+    X('s4b', M(slide(lt, .5, .25, -1200)));
+    X('s4c', M(slam(lt, .75, .2, 3), pulse(lt, .95, .035, 13)));
+    X('s4d', M(rise(lt, 1.0, .3, 60)));
+    X('s4e', M({ o: P(lt, 1.125, .2) }));
+  },
+  s5(lt) {
+    const strobeEnd = ITEMS.length * STEP;
+    X('s5t', M(pop(lt, 0, .25)));
+    if (lt < strobeEnd) {
+      const i = Math.min(ITEMS.length - 1, Math.floor(lt / STEP)), it = ITEMS[i], at = i * STEP;
+      $('s5bg').style.background = it.bg;
+      for (let j = 0; j < 6; j++) {
+        if (j !== i) { hide('s5i' + j); continue; }
+        X('s5i' + j, M(slam(lt, at, .2, 1.7), tilt(lt, at, i % 2 ? 16 : -16, .3), wob(lt, at + .2, 2.5, 10)));
+      }
+      const l = $('s5l'); l.textContent = it.k; l.style.color = it.fg;
+      X(l, M(rise(lt, at + .03, .2, 80)));
+      const d = $('s5d'); d.style.color = it.fg; X(d, { x: 0, y: 0, s: 1, sx: 1, sy: 1, r: 0, o: 1, b: 0 });
+      [...d.children].forEach((c, k) => c.classList.toggle('on', k === i));
+      for (let j = 0; j < 6; j++) hide('gi' + j);
+      hide('s5g');
+    } else {
+      $('s5bg').style.background = '#F4EFE9';
+      for (let j = 0; j < 6; j++) hide('s5i' + j);
+      hide('s5l'); hide('s5d');
+      for (let j = 0; j < 6; j++) X('gi' + j, M(pop(lt, strobeEnd + j * .05, .3), wob(lt, strobeEnd + .4 + j * .05, 2, 8)));
+      X('s5g', M(slam(lt, 2.625, .2, 2.2)));
+    }
+  },
+  s6(lt) {
+    const pt = E.outExpo(P(lt, 0, .32)), pb = E.outExpo(P(lt, .25, .32));
+    $('s6top').style.transform = `translateX(${((pt - 1) * 1080).toFixed(1)}px)`;
+    $('s6bot').style.transform = `translateX(${((1 - pb) * 1080).toFixed(1)}px)`;
+    $('s6bot').style.opacity = lt >= .25 ? 1 : 0;
+    X('s6a', M(pop(lt, .3, .3), tilt(lt, .3, -12), wob(lt, .7, 2, 6)));
+    X('s6b', M(rise(lt, .35, .3, 50)));
+    X('s6c', M(pop(lt, .5, .3), tilt(lt, .5, 12), wob(lt, .9, 2, 6)));
+    X('s6d', M(rise(lt, .55, .3, 50)));
+    // VS → 둘 다 OK 플립
+    const f1 = P(lt, 1.15, .1), f2 = P(lt, 1.25, .2);
+    X('s6e', M(pop(lt, .75, .3), { sx: lt < 1.25 ? 1 - E.inCubic(f1) : 0, o: lt < 1.25 ? 1 : 0 }));
+    X('s6f', M({ sx: E.outBack(f2), o: lt >= 1.25 ? 1 : 0, r: -4 }, wob(lt, 1.45, 2, 8), pulse(lt, 1.45, .03, 10)));
+  },
+  s7(lt) {
+    spin('s7x', lt, 16, .05);
+    // 질문
+    const qo = outFade(lt, .5, .125, -120, -.3);
+    X('s7a', M(pop(lt, 0, .25), qo));
+    X('s7b', M(slam(lt, .25, .2, 2.6), wob(lt, .45, 6, 14), qo));
+    // 이유 배지
+    const r2 = lt >= 2.125;
+    $('s7p').textContent = r2 ? '이유 02' : '이유 01';
+    X('s7p', M(pop(lt, r2 ? 2.125 : .625, .25), r2 ? tilt(lt, 2.125, 10) : tilt(lt, .625, -10)));
+    // 이유 01: 현금·계좌이체
+    const ex1 = outFade(lt, 2.0, .125, -260, 0);
+    X('s7c', M(slide(lt, .625, .28, 1100), ex1));
+    const xs = $('s7c').querySelectorAll('.xs');
+    const d1 = 190 * (1 - E.outCubic(P(lt, .875, .09))), d2 = 190 * (1 - E.outCubic(P(lt, .9375, .09)));
+    xs.forEach((p, i) => { p.style.strokeDasharray = 190; p.style.strokeDashoffset = i % 2 ? d2 : d1; });
+    X('s7d', M(rise(lt, .9375, .25, 60), ex1));
+    X('s7e', M(rise(lt, 1.0625, .25, 50), ex1));
+    // 이유 02: 자체 구매·물류
+    const rp = E.inOutCubic(P(lt, 2.125, .55));
+    X('s7f', M({ o: r2 ? 1 : 0 }));
+    $('rl').style.strokeDashoffset = (700 * (1 - E.outCubic(P(lt, 2.125, .5)))).toFixed(1);
+    $('s7f').querySelectorAll('.nd').forEach((g, i) => {
+      const p = P(lt, 2.125 + i * .25, .25), s = E.outBack(p);
+      g.style.transformOrigin = `${[80, 430, 780][i]}px 110px`; g.style.transform = `scale(${s.toFixed(3)})`; g.style.opacity = p > 0 ? 1 : 0;
+    });
+    X('s7g', M({ x: lerp(-350, 350, rp), y: -Math.abs(Math.sin(lt * 26)) * 6 * (rp > 0 && rp < 1), o: r2 ? 1 : 0 }));
+    X('s7h', M(rise(lt, 2.25, .25, 60)));
+    X('s7i', M(rise(lt, 2.375, .25, 50)));
+    // 가격 ↓ (두 번 반복)
+    const second = lt >= 2.0;
+    const at = second ? 2.75 : 1.25;
+    X('s7j', M(slam(lt, at, .2, 2.2), second && lt < 2.75 ? { o: 0 } : null, !second ? ex1 : null));
+    $('s7arrow').style.transform = `translateY(${(lt > at ? Math.abs(Math.sin((lt - at) * 9)) * 26 : 0).toFixed(1)}px)`;
+  },
+  s8(lt) {
+    const B = lt >= 1.5;
+    $('s8bg').style.background = B ? '#F4EFE9' : '#FFD43B';
+    // A: 영업시간
+    if (!B) {
+      X('s8a', M(slam(lt, 0, .2, 2.5)));
+      X('s8b', M(pop(lt, .125, .22)));
+      X('s8c', M(slam(lt, .375, .2, 2.5)));
+      X('s8d', M(rise(lt, .25, .25, 50)));
+      X('s8e', M(rise(lt, .5, .25, 50)));
+      const n = Math.round(365 * E.outCubic(P(lt, .625, .45)));
+      $('s8num').textContent = n;
+      X('s8f', M(pop(lt, .625, .25)));
+      X('s8g', M(pop(lt, 1.125, .28), tilt(lt, 1.125, -10)));
+      ['s8m', 's8h', 's8i', 's8j', 's8k', 's8l', 's8r1', 's8r2'].forEach(hide);
+    } else {
+      ['s8a', 's8b', 's8c', 's8d', 's8e', 's8f', 's8g'].forEach(hide);
+      // B: 위치
+      X('s8m', M({ o: P(lt, 1.5, .2), s: 1.18 - .18 * E.outCubic(P(lt, 1.5, 1.6)) }));
+      X('s8h', M({ y: (E.outBounce(P(lt, 1.55, .45)) - 1) * 760, o: lt >= 1.55 ? 1 : 0 }));
+      [['s8r1', 1.71], ['s8r2', 1.91]].forEach(([id, at]) => {
+        const p = P(lt, at, .6); X(id, M({ s: lerp(.3, 1.9, E.outCubic(p)), o: (lt >= at) * (1 - p) * .9 }));
+      });
+      X('s8i', M(slam(lt, 1.875, .2, 2.3)));
+      const addr = '서구 매월1로49번길 10', n = Math.round(addr.length * P(lt, 2.05, .4));
+      $('s8addr').textContent = addr.slice(0, n);
+      X('s8j', M({ o: lt >= 2.05 ? 1 : 0 }));
+      X('s8k', M(pop(lt, 2.375, .28), tilt(lt, 2.375, -8)));
+      X('s8l', M(pop(lt, 2.5, .28), tilt(lt, 2.5, 8)));
+    }
+  },
+  s9(lt) {
+    spin('s9x', lt, 12, .1);
+    X('s9a', M({ r: -2 }, pop(lt, 0, .35, .4), rise(lt, 0, .35, 220)));
+    const rows = $('s9a').querySelectorAll('.row');
+    rows.forEach((r, j) => {
+      const at = .5 + j * .625, p = P(lt, at, .25);
+      r.style.opacity = lt >= at ? 1 : 0;
+      r.style.transform = `translateX(${((1 - E.outExpo(p)) * -70).toFixed(1)}px)`;
+      r.querySelector('.ck').style.strokeDashoffset = (90 * (1 - E.outCubic(P(lt, at + .0625, .16)))).toFixed(1);
+      r.querySelector('.txt').style.backgroundSize = `${(100 * E.inOutCubic(P(lt, at + .125, .25))).toFixed(1)}% 100%`;
+    });
+  },
+  s10(lt) {
+    const exA = outFade(lt, 1.85, .15, -60, -.08);
+    X('s10a', M(pop(lt, 0, .3), exA));
+    const full = '@친구 여기 같이 가자!', tagN = 3, n = Math.round(full.length * P(lt, .1, .6));
+    $('s10tag').textContent = full.slice(0, Math.min(n, tagN));
+    $('s10rest').textContent = n > tagN ? full.slice(tagN, n) : '';
+    $('s10car').style.opacity = (Math.floor(lt * 4) % 2 === 0 || (lt > .1 && lt < .7)) ? 1 : 0;
+    X('s10b', M(rise(lt, .75, .25, 60), exA));
+    X('s10c', M(slam(lt, .875, .2, 2.8), wob(lt, 1.1, 3, 10), exA));
+    X('s10d', M(pop(lt, 1.25, .3), exA));
+    // 엔드카드
+    X('s10e', M(pop(lt, 2.0, .35), { y: (E.outBounce(P(lt, 2.0, .45)) - 1) * 300 }));
+    X('s10f', M(slam(lt, 2.125, .2, 2)));
+    X('s10g', M(rise(lt, 2.25, .25, 40)));
+    X('s10h', M(rise(lt, 2.375, .3, 50)));
+    X('s10i', M(pop(lt, 2.5, .3), tilt(lt, 2.5, -8), pulse(lt, 2.8, .025, 8)));
+  }
+};
+
+/* ---------- camera, transitions, HUD ---------- */
+const shakeCues = CUES.filter(c => c.k);
+function camera(t, sc) {
+  let x = 0, y = 0, s = 1, r = 0, b = 0;
+  s *= 1 + .03 * clamp((t - sc[1]) / (sc[2] - sc[1]));
+  for (const c of shakeCues) {
+    const d = t - c.t; if (d < 0 || d > .45) continue;
+    const a = Math.exp(-d * 11) * c.k;
+    x += Math.sin(d * 95) * a * 20; y += Math.cos(d * 78) * a * 15; r += Math.sin(d * 63) * a * .8;
+  }
+  for (const w of TR) {
+    const d = t - w.t;
+    if (w.k === 'whipx' || w.k === 'whipy') {
+      let off = 0, bl = 0;
+      if (d >= -.12 && d < 0) { const p = (d + .12) / .12; off = -E.inCubic(p) * 760; bl = p * 34; }
+      else if (d >= 0 && d < .16) { const p = d / .16; off = (1 - E.outCubic(p)) * 760; bl = (1 - p) * 34; }
+      if (w.k === 'whipx') x += off; else y += off; b += bl;
+    } else if (w.k === 'zoom') {
+      if (d >= -.1 && d < 0) { const p = (d + .1) / .1; s *= 1 + E.inCubic(p) * .35; b += p * 14; }
+      else if (d >= 0 && d < .18) { const p = d / .18; s *= 1.22 - .22 * E.outCubic(p); b += (1 - p) * 14; }
+    }
+  }
+  for (const k of BUMPS) { const d = t - k; if (d >= 0 && d < .2) s *= 1 + .07 * (1 - E.outCubic(d / .2)); }
+  const cam = $('cam');
+  cam.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${r.toFixed(2)}deg) scale(${s.toFixed(4)})`;
+  cam.style.filter = b > .5 ? `blur(${b.toFixed(1)}px)` : '';
+}
+function overlays(t) {
+  const fl = $('flash'), wp = $('wipe'), br = $('bars');
+  let fo = 0, fc = '#fff', wipe = null, bars = null;
+  for (const w of TR) {
+    const d = t - w.t;
+    if (w.k === 'flash' && d >= 0 && d < .16) { const o = 1 - E.outCubic(d / .16); if (o > fo) { fo = o; fc = w.c; } }
+    if (w.k === 'circle' && d >= -.2 && d < 0) wipe = { r: E.inCubic((d + .2) / .2) * 1150, c: w.c };
+    if (w.k === 'bars' && d >= -.18 && d < .2) bars = { d, c: w.c };
+  }
+  fl.style.display = fo > .01 ? 'block' : 'none'; fl.style.background = fc; fl.style.opacity = fo.toFixed(3);
+  if (wipe) { wp.style.display = 'block'; wp.style.background = wipe.c; wp.style.clipPath = `circle(${wipe.r.toFixed(1)}px at 540px 960px)`; }
+  else wp.style.display = 'none';
+  if (bars) {
+    br.style.display = 'block';
+    [...br.children].forEach((el, i) => {
+      el.style.top = (i * 320) + 'px'; el.style.background = bars.c;
+      let xx;
+      if (bars.d < 0) xx = -1080 * (1 - E.outCubic(clamp((bars.d + .18 - i * .015) / .1)));
+      else xx = 1080 * E.inCubic(clamp((bars.d - i * .015) / .11));
+      el.style.transform = `translateX(${xx.toFixed(1)}px)`;
+    });
+  } else br.style.display = 'none';
+}
+const prog = $('prog');
+SC.forEach(() => { const i = document.createElement('i'); i.appendChild(document.createElement('b')); prog.appendChild(i); });
+function hud(t, idx, dark) {
+  const hudEl = $('hud');
+  hudEl.style.color = dark ? '#ffffff' : '#141414';
+  hudEl.style.setProperty('--pinhole', dark ? '#141414' : '#F4EFE9');
+  [...prog.children].forEach((seg, i) => {
+    const [, a, b] = SC[i];
+    seg.firstChild.style.width = (100 * clamp((t - a) / (b - a))).toFixed(1) + '%';
+  });
+  const bo = P(t, 4.5, .2) * (1 - P(t, 24.5, .15));
+  $('brand').style.opacity = bo.toFixed(3);
+}
+
+let lastIdx = -1;
+function render(t) {
+  t = clamp(t, 0, D - 1e-4);
+  let idx = SC.findIndex(s => t >= s[1] && t < s[2]); if (idx < 0) idx = SC.length - 1;
+  if (idx !== lastIdx) { SC.forEach((s, i) => { $(s[0]).style.display = i === idx ? 'block' : 'none'; }); lastIdx = idx; }
+  const sc = SC[idx], lt = t - sc[1];
+  S[sc[0]](lt);
+  camera(t, sc);
+  overlays(t);
+  let dark = sc[3];
+  if (sc[0] === 's5') { const i = Math.floor(lt / STEP); dark = i < ITEMS.length ? ITEMS[i].dark : 0; }
+  if (sc[0] === 's8') dark = 0;
+  hud(t, idx, dark);
+}
+
+/* ---------- player / render bridge ---------- */
+const RENDER = new URLSearchParams(location.search).has('render');
+const fontsReady = Promise.all([
+  document.fonts.load('400 100px BHS', '메가바스켓 가격 0123456789!'),
+  document.fonts.load('700 50px Pre', '가격'), document.fonts.load('800 50px Pre', '가격'), document.fonts.load('900 50px Pre', '가격')
+]).then(() => document.fonts.ready);
+window.__meta = { D, FPS, CUES, BED };
+window.__seek = t => render(t);
+window.__ready = fontsReady;
+
+function fit() {
+  const k = RENDER ? 1 : Math.max(.12, Math.min((innerHeight - 24 - 48 - 12) / 1920, (innerWidth - 32) / 1080));
+  document.documentElement.style.setProperty('--k', k);
+}
+fit(); addEventListener('resize', fit);
+
+if (RENDER) {
+  document.body.classList.add('render');
+  fontsReady.then(() => render(0));
+} else {
+  const snd = $('snd'), pp = $('pp'), sc = $('sc'), tm = $('tm'), big = $('big');
+  let playing = false, clockStart = 0, cur = 0, useAudio = true;
+  snd.addEventListener('error', () => { useAudio = false; });
+  const setBtn = () => { pp.textContent = playing ? '❚❚' : '▶'; big.style.display = playing ? 'none' : ''; };
+  function play() {
+    if (cur >= D - .05) cur = 0;
+    playing = true; clockStart = performance.now() - cur * 1000;
+    if (useAudio) { try { snd.currentTime = cur; snd.play().catch(() => { useAudio = false; }); } catch (e) { useAudio = false; } }
+    setBtn();
+  }
+  function pause() { playing = false; snd.pause(); setBtn(); }
+  pp.onclick = () => playing ? pause() : play();
+  big.onclick = play;
+  $('rs').onclick = () => { cur = 0; if (playing) play(); else render(0); };
+  sc.oninput = () => { cur = +sc.value; if (playing) play(); else render(cur); };
+  addEventListener('keydown', e => { if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); playing ? pause() : play(); } });
+  function tick(now) {
+    if (playing) {
+      cur = (useAudio && !snd.paused && snd.readyState > 2) ? snd.currentTime : (now - clockStart) / 1000;
+      if (cur >= D) { cur = 0; play(); }
+    }
+    render(cur);
+    sc.value = cur; tm.textContent = `${cur.toFixed(1)} / ${D.toFixed(1)}s`;
+    requestAnimationFrame(tick);
+  }
+  fontsReady.then(() => { render(0); requestAnimationFrame(tick); });
+  setBtn();
+}
+</script>
+</body>
+</html>
