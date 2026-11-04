@@ -16,12 +16,16 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const OUT = process.env.OUT_DIR ? path.resolve(process.env.OUT_DIR) : ROOT;
-const NAME = 'megabasket_hook_reel_26s';
 const args = process.argv.slice(2);
+const arg = (k, d) => args.includes(k) ? args[args.indexOf(k) + 1] : d;
+// --page blog_review/index.html --name 파일이름 --cover 커버시각(초)  (기본값은 26초 후킹 릴스)
+const PAGE = arg('--page', 'index.html');
+const NAME = arg('--name', 'megabasket_hook_reel_26s');
+const COVER_T = parseFloat(arg('--cover', '1.25'));
+const OUT = process.env.OUT_DIR ? path.resolve(process.env.OUT_DIR) : path.dirname(path.join(ROOT, PAGE));
 const framesArg = args.includes('--frames') ? args[args.indexOf('--frames') + 1] : null;
 
-const MIME = { '.html': 'text/html; charset=utf-8', '.woff2': 'font/woff2', '.js': 'text/javascript', '.m4a': 'audio/mp4', '.mp4': 'video/mp4' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.woff2': 'font/woff2', '.jpg': 'image/jpeg', '.png': 'image/png', '.js': 'text/javascript', '.m4a': 'audio/mp4', '.mp4': 'video/mp4' };
 function serve() {
   return new Promise(res => {
     const srv = http.createServer((req, rsp) => {
@@ -36,7 +40,7 @@ function serve() {
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
   const srv = await serve();
-  const url = `http://127.0.0.1:${srv.address().port}/index.html?render=1`;
+  const url = `http://127.0.0.1:${srv.address().port}/${PAGE}?render=1`;
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
   page.on('pageerror', e => console.error('[page error]', e.message));
@@ -71,11 +75,16 @@ function serve() {
   ff.stdin.end();
   await new Promise(r => ff.on('close', r));
 
-  // 커버(그리드용 9:16) : 훅 장면
-  await page.evaluate(t => window.__seek(t), 1.25);
+  // 커버(그리드용 9:16)
+  await page.evaluate(t => window.__seek(t), COVER_T);
   await page.screenshot({ path: path.join(OUT, `${NAME}_cover.jpg`), type: 'jpeg', quality: 92 });
   await browser.close(); srv.close();
 
+  if (meta.audio === false) {  // 음악·효과음 없는 버전
+    fs.renameSync(silent, path.join(OUT, `${NAME}.mp4`));
+    console.log('done (no audio):', path.join(OUT, `${NAME}.mp4`), `(${((Date.now() - t0) / 1000).toFixed(0)}s)`);
+    return;
+  }
   // 효과음 합성 → 영상에 입히기
   const cues = path.join(OUT, `${NAME}_cues.json`);
   const wav = path.join(OUT, `${NAME}.wav`);
