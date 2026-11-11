@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#faf7f0">
+<title>카톡 발주·품목 정리기</title>
+<style>
+:root{--bg:#faf7f0;--ink:#233b32;--muted:#5b6b62;--line:#d9dccf;--card:#fff;--soft:#eef2ea;--accent:#236d4d;--accent-hover:#1b5a3f;--warn:#fff4c7;--warn-line:#e2c35a;--danger:#a12e38}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Apple SD Gothic Neo","맑은 고딕","Malgun Gothic",sans-serif;font-size:16px;line-height:1.55}
+main{max-width:1180px;margin:0 auto;padding:28px 18px 64px}
+.eyebrow{font-size:13px;letter-spacing:.1em;color:var(--muted)}
+header h1{font-size:30px;letter-spacing:-.04em;margin:6px 0 4px}
+header p{margin:0;color:var(--muted)}
+.privacy{display:inline-block;margin-top:12px;font-size:14px;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:6px 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px;margin-top:20px}
+h2{font-size:21px;letter-spacing:-.03em;margin:0 0 14px}
+.step{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:15px;margin-right:8px;vertical-align:2px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:12px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:600}
+input[type=text],input[type=date],input[type=search],select,textarea{font:inherit;color:inherit;background:#fff;border:1px solid #c5cbbd;border-radius:10px;padding:9px 11px;min-height:42px}
+textarea{width:100%;min-height:220px;resize:vertical;line-height:1.5;font-size:15px}
+.drop.over textarea{outline:3px dashed var(--accent);outline-offset:2px;background:var(--soft)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+button{font:inherit;font-weight:700;border-radius:12px;border:1px solid #c3c9bb;background:#fff;color:var(--ink);padding:10px 16px;min-height:44px;cursor:pointer}
+button:hover{background:#f3f5ef}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{background:var(--accent-hover)}
+button.danger{color:var(--danger);border-color:#e3c3c6}
+button.small{min-height:36px;padding:5px 12px;font-size:14px;border-radius:9px}
+button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.hint{font-size:14px;color:var(--muted)}
+.status{margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--soft);font-size:15px}
+.status:empty{display:none}
+.status.warn{background:var(--warn)}
+.status p{margin:2px 0}
+details.help{margin-top:14px;font-size:15px}
+summary{cursor:pointer;font-weight:700;min-height:36px;padding-top:4px}
+details.help h3{font-size:15px;margin:12px 0 2px}
+details.help ol,details.help ul{padding-left:22px;margin:4px 0}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:6px}
+.filters label.f{min-width:140px;flex:1 1 140px}
+.quick{display:flex;gap:6px;flex-wrap:wrap;align-self:center;flex-basis:100%}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-top:14px;flex-wrap:wrap}
+.tabs button{border-radius:10px 10px 0 0;border-bottom:none;min-height:42px}
+.tabs button[aria-selected=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.count{font-weight:400;font-size:13px;opacity:.85;margin-left:2px}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-top:none;border-radius:0 0 12px 12px;max-height:70vh;background:#fff}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid #ebece4;padding:5px 7px;text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:#f4f5ef;z-index:1;white-space:nowrap;font-size:13px;padding:9px 7px}
+tr.check td{background:var(--warn)}
+td input,td select{width:100%;min-height:34px;padding:5px 7px;border-radius:7px;border:1px solid transparent;background:transparent;font:inherit;font-size:14px;color:inherit}
+td input:hover,td select:hover{border-color:#cfd3c6}
+td input:focus,td select:focus{border-color:var(--accent);background:#fff}
+td.type select{min-width:104px}
+td.qty input{width:76px;text-align:right}
+td.unit input{width:66px}
+td.item input{min-width:150px}
+td.note input{min-width:110px}
+td.meta{white-space:nowrap;padding-top:11px}
+td.meta input{min-width:90px}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.src{min-width:200px;max-width:340px;color:var(--muted);font-size:13px}
+.clamp{white-space:pre-wrap;word-break:break-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer;padding-top:6px}
+.clamp.open{display:block}
+.tag{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px;white-space:nowrap;background:#e9ece4}
+.tag.check{background:#f6dc79}
+.empty{padding:34px 20px;text-align:center;color:var(--muted)}
+.legend{font-size:13px;color:var(--muted);margin:8px 0 0}
+.legend i{display:inline-block;width:14px;height:14px;background:var(--warn);border:1px solid var(--warn-line);vertical-align:-2px;border-radius:3px;margin-right:4px}
+details.card>summary{font-size:18px}
+details.card textarea{min-height:64px}
+details.card label.f{margin-top:12px}
+footer{margin-top:24px;font-size:13px;color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:600px){main{padding:20px 12px 50px}header h1{font-size:25px}.card{padding:16px;border-radius:16px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="eyebrow">단톡방 대화 → 표 한 장</div>
+  <h1>📦 카톡 발주·품목 정리기</h1>
+  <p>단톡방 대화를 붙여넣으면 발주·품목보고를 품목/수량 표로 정리해 드려요.</p>
+  <span class="privacy">🔒 넣은 대화는 이 브라우저 안에서만 처리돼요. 인터넷으로 보내지 않아요.</span>
+</header>
+
+<section class="card" aria-labelledby="s1">
+  <h2 id="s1"><span class="step">1</span>카톡 대화 넣기</h2>
+  <div class="fields">
+    <label class="f">방 이름<input type="text" id="room" placeholder="예: 본점 발주방 (파일이면 자동)" autocomplete="off"></label>
+    <label class="f">이 방 내용은<select id="mode">
+      <option value="auto">자동으로 구분</option>
+      <option value="order">전부 발주</option>
+      <option value="report">전부 품목보고</option>
+    </select></label>
+    <label class="f">날짜가 안 적혀 있으면<input type="date" id="baseDate"></label>
+  </div>
+  <div class="drop" id="drop">
+    <label class="sr" for="raw">카톡 대화 내용</label>
+    <textarea id="raw" spellcheck="false" placeholder="여기에 카톡 대화를 붙여넣으세요 (Ctrl+V)&#10;&#10;예)&#10;[김점장] [오후 6:00] 발주 요청드립니다&#10;양파 20kg&#10;대파 3단, 감자 2박스"></textarea>
+  </div>
+  <div class="actions">
+    <button class="primary" id="run">정리하기</button>
+    <button id="pick">📄 대화 파일 불러오기</button>
+    <input type="file" id="file" accept=".txt,.csv,text/plain,text/csv" multiple hidden>
+    <span class="hint">내보낸 .txt 파일을 위 칸에 끌어다 놓아도 돼요. 여러 방을 차례로 넣으면 표에 계속 쌓여요.</span>
+  </div>
+  <div class="status" id="status" role="status" aria-live="polite"></div>
+
+  <details class="help">
+    <summary>카톡 대화는 어떻게 가져오나요?</summary>
+    <h3>💻 PC 카카오톡 (추천)</h3>
+    <ol>
+      <li>정리할 단톡방을 열어요.</li>
+      <li>오른쪽 위 메뉴(≡)에서 <b>대화 내보내기</b>를 눌러 .txt 파일로 저장해요. (버전에 따라 메뉴 위치나 이름이 조금 다를 수 있어요.)</li>
+      <li>저장한 파일을 <b>대화 파일 불러오기</b>로 고르거나, 입력칸에 끌어다 놓아요. 방 이름은 파일에서 자동으로 읽어요.</li>
+    </ol>
+    <p class="hint">필요한 메시지만 넣고 싶으면 말풍선을 마우스로 끌어서 선택하고 Ctrl+C로 복사한 뒤 붙여넣어도 돼요.</p>
+    <h3>📱 휴대폰 카카오톡</h3>
+    <ol>
+      <li>단톡방 → 오른쪽 위 메뉴(≡) → 설정(톱니바퀴) → <b>대화 내용 내보내기</b> → <b>텍스트만 보내기</b></li>
+      <li>메일이나 ‘나와의 채팅’으로 보낸 뒤, 그 파일을 열어 내용을 복사해서 붙여넣어요.</li>
+    </ol>
+    <h3>💡 알아두면 좋아요</h3>
+    <ul>
+      <li>이미 넣은 메시지는 다시 넣어도 두 번 들어가지 않아요. 매일 대화 전체를 내보내서 넣어도 괜찮아요. (방 이름은 매번 똑같이 써 주세요.)</li>
+      <li>말풍선 하나만 복사해서 넣어도 돼요. 이름이나 시간이 없으면 ‘날짜가 안 적혀 있으면’에 고른 날짜로 정리돼요.</li>
+      <li>사진으로 올린 발주서는 글자가 아니라서 읽지 못해요. 사진이 몇 장 있었는지는 알려 드려요.</li>
+    </ul>
+  </details>
+</section>
+
+<section class="card" aria-labelledby="s2">
+  <h2 id="s2"><span class="step">2</span>확인하고 고치기</h2>
+  <div class="filters">
+    <div class="quick" role="group" aria-label="기간 빠르게 고르기">
+      <button class="small" data-range="today">오늘</button>
+      <button class="small" data-range="yesterday">어제</button>
+      <button class="small" data-range="week">최근 7일</button>
+      <button class="small on" data-range="all">전체 기간</button>
+    </div>
+    <label class="f">시작일<input type="date" id="from"></label>
+    <label class="f">종료일<input type="date" id="to"></label>
+    <label class="f">구분<select id="ftype"><option value="">전체</option><option>발주</option><option>품목보고</option><option>미분류</option></select></label>
+    <label class="f">방<select id="froom"><option value="">전체</option></select></label>
+    <label class="f">검색<input type="search" id="q" placeholder="품목·이름·내용"></label>
+  </div>
+  <div class="tabs" role="tablist" aria-label="보기 선택">
+    <button role="tab" data-tab="rows" aria-selected="true" aria-controls="view">품목 목록<span class="count" id="c-rows"></span></button>
+    <button role="tab" data-tab="sum" aria-selected="false" aria-controls="view">품목별 합계<span class="count" id="c-sum"></span></button>
+    <button role="tab" data-tab="skip" aria-selected="false" aria-controls="view">건너뛴 메시지<span class="count" id="c-skip"></span></button>
+  </div>
+  <div class="tablewrap" id="view" role="tabpanel"></div>
+  <p class="legend" id="legend"></p>
+  <div class="actions" id="rowActions"><button class="small" id="addRow">+ 빈 줄 추가</button></div>
+</section>
+
+<section class="card" aria-labelledby="s3">
+  <h2 id="s3"><span class="step">3</span>내보내기</h2>
+  <p class="hint">지금 보고 있는 탭과 필터(기간·구분·방·검색) 그대로 내보내요.</p>
+  <div class="actions">
+    <button class="primary" id="csv">⬇ 엑셀 파일로 저장</button>
+    <button id="copy">📋 표 복사 (엑셀·구글시트에 붙여넣기)</button>
+    <button id="ai">🤖 AI에게 맡길 글 복사</button>
+  </div>
+  <div class="status" id="status2" role="status" aria-live="polite"></div>
+  <details class="help">
+    <summary>🤖 ‘AI에게 맡길 글’은 언제 쓰나요?</summary>
+    <p>말투가 제각각이라 자동 정리가 잘 안 될 때 써요. 버튼을 누르면 정리 규칙과 고른 기간의 대화 원문이 함께 복사돼요. Claude나 ChatGPT 대화창에 붙여넣기만 하면 표로 정리해 줘요.</p>
+    <p class="hint">거래처 정보 같은 회사 자료를 AI에 넣어도 되는지는 먼저 확인해 주세요.</p>
+  </details>
+</section>
+
+<details class="card" id="settings">
+  <summary>⚙️ 설정 (구분 단어 · 단위 · 데이터 지우기)</summary>
+  <label class="f">이 단어가 들어 있으면 ‘발주’로 봐요 (쉼표로 구분)<textarea id="sOrder"></textarea></label>
+  <label class="f">이 단어가 들어 있으면 ‘품목보고’로 봐요<textarea id="sReport"></textarea></label>
+  <label class="f">추가 단위 (예: 바스켓, 짝, 판넬)<input type="text" id="sUnits"></label>
+  <p class="hint">설정은 앞으로 넣는 대화부터 적용돼요. 이미 넣은 대화에 적용하려면 ‘저장된 대화 다시 정리’를 눌러 주세요. 표에서 직접 고친 내용은 그때 사라져요.</p>
+  <div class="actions">
+    <button class="primary small" id="saveSettings">설정 저장</button>
+    <button class="small" id="resetSettings">기본값으로</button>
+    <button class="small" id="reparse">저장된 대화 다시 정리</button>
+    <button class="small danger" id="clearAll">모든 데이터 지우기</button>
+  </div>
+  <div class="status" id="status3" role="status" aria-live="polite"></div>
+</details>
+
+<footer>넣은 대화와 정리한 표는 이 컴퓨터의 브라우저에만 저장돼요. 여러 사람이 같이 쓰는 컴퓨터라면 다 쓴 뒤 설정에서 ‘모든 데이터 지우기’를 눌러 주세요.</footer>
+</main>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+/* ---------- 기본 설정 ---------- */
+const STORE = 'kakao-order-tool-v1';
+const DEFAULTS = {
+  orderWords: '발주, 주문, 오더, 보내주세요, 보내 주세요, 넣어주세요, 넣어 주세요, 요청, 부탁, 필요합니다, 필요해요',
+  reportWords: '품목보고, 보고, 재고, 입고, 출고, 현황, 남음, 남은, 남았, 잔량, 소진, 사용량, 판매량',
+  extraUnits: ''
+};
+const BASE_UNITS = ('박스 box 상자 케이스 cs 파레트 plt kg 킬로 키로 g 그램 톤 근 봉지 봉투 봉 팩 pack 병 캔 통 포대 포 ' +
+  '묶음 다발 꾸러미 단 망 판 줄 장 마리 미 개입 개 ea pcs pc 세트 set 롤 매 대 짝 바구니 바스켓 L 리터 ml 말 되 접 ' +
+  '쾌 손 모 포기 송이 덩이 토막 쪽 컵 인분 곽 갑').split(' ');
+const UNIT_NORM = {'키로':'kg','킬로':'kg','그램':'g','리터':'L','l':'L','box':'박스','ea':'개','pc':'개','pcs':'개',
+  'set':'세트','pack':'팩','cs':'케이스','plt':'파레트'};
+const WORDNUM = {'한':1,'두':2,'세':3,'네':4,'다섯':5,'여섯':6,'일곱':7,'여덟':8,'아홉':9,'열':10,'반':0.5};
+const TYPES = ['발주', '품목보고', '미분류'];
+const LABEL = {date:'날짜',time:'시간',room:'방',sender:'보낸사람',item:'품목',qty:'수량',unit:'단위',note:'비고'};
+
+let S = {messages: [], rows: [], seq: 1, settings: {...DEFAULTS}};
+const ui = {tab: 'rows', from: '', to: '', type: '', room: '', q: ''};
+let QTY_RE = null;
+const KW = {order: [], report: []};
+
+/* ---------- 저장 ---------- */
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (d && Array.isArray(d.messages) && Array.isArray(d.rows)) {
+      S = {messages: d.messages, rows: d.rows, seq: d.seq || 1, settings: {...DEFAULTS, ...(d.settings || {})}};
+    }
+  } catch (e) { /* 저장된 값이 없거나 깨졌으면 새로 시작 */ }
+}
+let saveTimer = 0;
+function save() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 300); }
+function saveNow() {
+  clearTimeout(saveTimer);
+  try { localStorage.setItem(STORE, JSON.stringify(S)); }
+  catch (e) { say('#status', ['브라우저 저장 공간이 부족해서 자동 저장을 못 했어요. 엑셀 파일로 먼저 저장해 두세요.'], true); }
+}
+window.addEventListener('pagehide', saveNow);
+
+/* ---------- 공통 도구 ---------- */
+const pad = n => String(n).padStart(2, '0');
+const ymd = (y, m, d) => `${y}-${pad(m)}-${pad(d)}`;
+function today(offset = 0) { const d = new Date(); d.setDate(d.getDate() + offset); return ymd(d.getFullYear(), d.getMonth() + 1, d.getDate()); }
+function to24(ap, h, m) { h = +h; if (ap === '오후' && h < 12) h += 12; if (ap === '오전' && h === 12) h = 0; return pad(h) + ':' + pad(m); }
+const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const words = s => String(s || '').split(/[,\n]/).map(w => w.trim()).filter(Boolean);
+const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function hash(str) {
+  let a = 0xdeadbeef, b = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); a = Math.imul(a ^ c, 2654435761); b = Math.imul(b ^ c, 1597334677); }
+  a = Math.imul(a ^ (a >>> 16), 2246822507) ^ Math.imul(b ^ (b >>> 13), 3266489909);
+  b = Math.imul(b ^ (b >>> 16), 2246822507) ^ Math.imul(a ^ (a >>> 13), 3266489909);
+  return (4294967296 * (2097151 & b) + (a >>> 0)).toString(36);
+}
+function say(sel, lines, warn = false) {
+  const el = $(sel);
+  el.classList.toggle('warn', !!warn);
+  el.innerHTML = lines.map(l => `<p>${h(l)}</p>`).join('');
+}
+
+function compile() {
+  const units = [...new Set([...BASE_UNITS, ...words(S.settings.extraUnits)])].sort((a, b) => b.length - a.length).map(esc);
+  QTY_RE = new RegExp(
+    '(?:(?<![a-z])([x×*])\\s*)?' +
+    '(\\d+(?:\\.\\d+)?(?:\\s*~\\s*\\d+(?:\\.\\d+)?)?|(?<![가-힣])(?:다섯|여섯|일곱|여덟|아홉|한|두|세|네|열|반))' +
+    '\\s*(' + units.join('|') + ')?(?![a-z])', 'gi');
+  KW.order = words(S.settings.orderWords);
+  KW.report = words(S.settings.reportWords);
+}
+
+/* ---------- 1) 카톡 대화 읽기 ---------- */
+const D = '(\\d{4})\\s*(?:년|\\.)\\s*(\\d{1,2})\\s*(?:월|\\.)\\s*(\\d{1,2})\\s*(?:일|\\.)?';
+const TS = D + '\\s*,?\\s*(?:(오전|오후)\\s*)?(\\d{1,2}):(\\d{2})(?::\\d{2})?\\s*,';
+const RE = {
+  header: /^\s*(.+?)\s*님과\s*카카오톡\s*대화/,
+  saved: /^\s*저장한\s*날짜\s*:/,
+  dateLine: new RegExp('^[-=\\s]*' + D + '\\s*\\(?[월화수목금토일]요일\\)?[-=\\s]*$'),
+  pcMsg: /^\[([^\]]+)\]\s*\[(?:(오전|오후)\s*)?(\d{1,2}):(\d{2})\]\s?(.*)$/,
+  mobMsg: new RegExp('^' + TS + '\\s*(.+?)\\s:\\s?(.*)$'),
+  mobSys: new RegExp('^' + TS),
+  sys: /님이 (?:들어왔습니다|나갔습니다)|님을 (?:초대|내보냈)|초대(?:했|하였)습니다|채팅방 관리자가|메시지를 가렸습니다|^운영정책을 위반한/,
+  media: /^(?:사진(?:\s*\d+장)?|동영상|이모티콘|음성\s*메시지|삭제된 메시지입니다\.?|보이스톡.*|페이스톡.*|파일\s*:.*|<(?:사진|동영상) 읽지 않음>|\(이모티콘\)|샵검색\s*:.*|지도\s*:.*|연락처\s*:.*|투표\s*:.*|일정\s*:.*)$/
+};
+
+function csvRows(text) {
+  const rows = []; let row = [], f = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ',') { row.push(f); f = ''; }
+    else if (c === '\n') { row.push(f); rows.push(row); row = []; f = ''; }
+    else f += c;
+  }
+  if (f || row.length) { row.push(f); rows.push(row); }
+  return rows;
+}
+function parseCsv(text) {
+  const rows = csvRows(text);
+  const head = rows.shift().map(x => x.trim().toLowerCase());
+  const di = head.indexOf('date'), ui_ = head.indexOf('user'), mi = head.indexOf('message');
+  const messages = [];
+  for (const r of rows) {
+    const m = String(r[di] || '').match(/(\d{4})[-./]\s*(\d{1,2})[-./]\s*(\d{1,2})\.?\s*(?:(오전|오후)\s*)?(\d{1,2}):(\d{2})/);
+    if (!m) continue;
+    messages.push({date: ymd(m[1], m[2], m[3]), time: to24(m[4], m[5], m[6]), sender: String(r[ui_] || '').trim(), text: String(r[mi] || '').replace(/\s+$/, '')});
+  }
+  return {room: '', messages, matched: messages.length};
+}
+
+function parseChat(raw, baseDate) {
+  const text = String(raw).replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+  if (/^\s*"?date"?\s*,\s*"?user"?\s*,/i.test(text.split('\n', 1)[0])) return parseCsv(text);
+  let room = '', curDate = '', cur = null, matched = 0;
+  const messages = [];
+  for (const line of text.split('\n')) {
+    let m;
+    if (!matched && !room && (m = line.match(RE.header))) { room = m[1].trim(); continue; }
+    if (!matched && RE.saved.test(line)) continue;
+    if ((m = line.match(RE.dateLine))) { curDate = ymd(m[1], m[2], m[3]); cur = null; continue; }
+    if ((m = line.match(RE.pcMsg))) {
+      cur = {date: curDate || baseDate, time: to24(m[2], m[3], m[4]), sender: m[1].trim(), text: m[5]};
+      messages.push(cur); matched++; continue;
+    }
+    if ((m = line.match(RE.mobMsg))) {
+      curDate = ymd(m[1], m[2], m[3]);
+      cur = {date: curDate, time: to24(m[4], m[5], m[6]), sender: m[7].trim(), text: m[8]};
+      messages.push(cur); matched++; continue;
+    }
+    if ((m = line.match(RE.mobSys))) { curDate = ymd(m[1], m[2], m[3]); cur = null; continue; }
+    if (RE.sys.test(line.trim())) { cur = null; continue; }
+    if (cur) cur.text += '\n' + line;
+  }
+  if (!matched) {
+    const t = text.trim();
+    return {room, messages: t ? [{date: baseDate, time: '', sender: '', text: t}] : [], matched: 0};
+  }
+  messages.forEach(x => { x.text = x.text.replace(/\s+$/, ''); });
+  return {room, messages, matched};
+}
+
+/* ---------- 2) 품목·수량 찾기 ---------- */
+const STOP_EXACT = new Set(('총 약 각 좀 더 및 또 그리고 하고 이랑 랑 은 는 이 가 을 를 도 요 만 네 넵 예 오늘 내일 모레 금일 명일 익일 ' +
+  '이번 다음 개수 수량 품목 목록 리스트 입니다 이에요 예요 이요 정도 씩 각각 전부 모두 일단 우선').split(' '));
+const STOP_PREFIX = /^(?:발주|주문|오더|요청|부탁|보내|넣어|주세요|드립니다|드려요|드릴게요|해주세요|품목보고|보고|재고|입고|출고|현황|잔량|남은|남음|남았|소진|사용량|판매량|필요|추가|확인|감사|수고|안녕|오늘|내일|모레|금일|명일|익일|이번주|다음주|부족|있습니다|있어요|없습니다|없어요|입니다|이에요)/;
+const DATE_TOK = /^\d+(?:[/.\-:]\d+)*(?:일|월|시|분|차|번|주|일자)?(?:까지|부터|에|날|분|자)?$/;
+const UNIT_TAIL = /^(?:요|씩|만|은|는|이|가|을|를|도|정도|짜리|까지|으로|로|에|와|과|랑|입니다|이요|남|보내|주세요|부탁|추가|필요)/;
+const SEG_SPLIT =/[,，、;；|·ㆍ]|(?<!\d)\/|\/(?!\d)|\s(?:그리고|및|하고)\s/;
+
+function isStop(t) {
+  if (STOP_EXACT.has(t) || STOP_PREFIX.test(t)) return true;
+  for (const k of KW.order.concat(KW.report)) if (k.length >= 2 && !/\s/.test(k) && t.startsWith(k)) return true;
+  return false;
+}
+function tokens(s) {
+  return s.replace(/[[\]{}<>「」『』【】"'“”‘’]/g, ' ').split(/\s+/)
+    .map(t => t.replace(/^[^\p{L}\p{N}(]+|[^\p{L}\p{N})]+$/gu, '')).filter(Boolean);
+}
+function balance(s) {
+  s = s.trim();
+  if (s.startsWith('(') && !s.includes(')')) s = s.slice(1);
+  if (s.endsWith(')') && !s.includes('(')) s = s.slice(0, -1);
+  return s.trim();
+}
+function cleanName(s) {
+  const tk = tokens(s).filter(t => !isStop(t) && !DATE_TOK.test(t));
+  if (tk.length) { const i = tk.length - 1; if (tk[i].length >= 3) tk[i] = tk[i].replace(/(?:은|는|을|를)$/, ''); }
+  return balance(tk.join(' '));
+}
+const cleanNote = s => balance(tokens(s).filter(t => !isStop(t)).join(' '));
+function normUnit(u) { if (!u) return ''; const k = u.toLowerCase(); return UNIT_NORM[k] || UNIT_NORM[u] || (/^[a-z]+$/i.test(u) ? k : u); }
+function stripBullet(s) {
+  return s.replace(/^\s*(?:[-–—•●○◦▪▫■□▶▷►➤→☞✔✓✅※*>]+\s*|\(?\d{1,2}[.)](?:\s+|(?=[가-힣a-z]))|[①-⑳]\s*)/iu, '');
+}
+function matchQty(seg) {
+  const out = [];
+  QTY_RE.lastIndex = 0;
+  let m;
+  while ((m = QTY_RE.exec(seg))) {
+    const x = m[1] || '', num = m[2];
+    let unit = m[3] || '', end = m.index + m[0].length;
+    const numEnd = m.index + m[0].indexOf(num) + num.length;
+    // "양파*3 대파"처럼 숫자 뒤에 띄어 쓴 다음 단어의 첫 글자(대)를 단위로 잘못 읽지 않도록
+    if (unit && numEnd < end - unit.length && /^[가-힣]/.test(seg.slice(end)) && !UNIT_TAIL.test(seg.slice(end))) { unit = ''; end = numEnd; }
+    const isWord = !/^\d/.test(num);
+    if ((!unit && !x) || (isWord && !unit)) continue;
+    out.push({start: m.index, end, x, qty: isWord ? String(WORDNUM[num]) : num.replace(/\s+/g, ''), unit: normUnit(unit)});
+  }
+  return out;
+}
+function addNote(item, s) { if (s) item.note = item.note ? item.note + ' ' + s : s; }
+
+function extractItems(text) {
+  const items = [];
+  const t = String(text).replace(/(\d),(?=\d{3}(?!\d))/g, '$1');
+  for (const line of t.split('\n')) {
+    for (let seg of line.split(SEG_SPLIT)) {
+      seg = stripBullet(seg || '');
+      if (!seg.trim()) continue;
+      const f = matchQty(seg);
+      if (f.length) {
+        const qtyFirst = !cleanName(seg.slice(0, f[0].start)) && !!cleanName(seg.slice(f[0].end, f[1] ? f[1].start : seg.length));
+        f.forEach((q, i) => {
+          const name = qtyFirst
+            ? cleanName(seg.slice(q.end, f[i + 1] ? f[i + 1].start : seg.length))
+            : cleanName(seg.slice(i ? f[i - 1].end : 0, q.start));
+          if (!name && i > 0 && items.length && !qtyFirst) { addNote(items[items.length - 1], (q.x ? 'x' : '') + q.qty + q.unit); return; }
+          items.push({item: name, qty: q.qty, unit: q.unit, note: ''});
+        });
+        if (!qtyFirst && items.length) addNote(items[items.length - 1], cleanNote(seg.slice(f[f.length - 1].end)));
+      } else {
+        const m = seg.match(/^(.*?[가-힣a-z)\]])\s*[:=-]?\s*(\d+(?:\.\d+)?)\s*$/i);
+        if (m) { const name = cleanName(m[1]); if (name) items.push({item: name, qty: m[2], unit: '', note: '', bare: true}); }
+      }
+    }
+  }
+  return items;
+}
+
+function countIn(text, ws) {
+  let n = 0, first = Infinity;
+  for (const w of ws) {
+    let i = text.indexOf(w);
+    if (i >= 0) first = Math.min(first, i);
+    while (i >= 0) { n++; i = text.indexOf(w, i + w.length); }
+  }
+  return {n, first};
+}
+function classify(text) {
+  const o = countIn(text, KW.order), r = countIn(text, KW.report);
+  if (!o.n && !r.n) return '';
+  if (o.n !== r.n) return o.n > r.n ? '발주' : '품목보고';
+  return o.first <= r.first ? '발주' : '품목보고';
+}
+
+function analyze(msg) {
+  if (RE.media.test(msg.text.trim())) { msg.status = 'media'; return 0; }
+  const kw = classify(msg.text);
+  let items = extractItems(msg.text);
+  if (msg.mode === 'auto' && !kw && !items.some(i => !i.bare)) items = [];
+  const type = msg.mode === 'order' ? '발주' : msg.mode === 'report' ? '품목보고' : (kw || '미분류');
+  if (!items.length) { msg.status = kw ? 'check' : 'chat'; return 0; }
+  for (const it of items) {
+    S.rows.push({id: S.seq++, msgId: msg.id, date: msg.date, time: msg.time, room: msg.room, sender: msg.sender,
+      type, item: it.item, qty: it.qty, unit: it.unit, note: it.note});
+  }
+  msg.status = 'used';
+  return items.length;
+}
+
+function ingest(raw, opts) {
+  const p = parseChat(raw, opts.baseDate);
+  const room = (opts.room || p.room || opts.fileName || '이름 없는 방').trim();
+  const known = new Set(S.messages.map(m => m.key));
+  const r = {room, total: p.messages.length, matched: p.matched, added: 0, dup: 0, items: 0, used: 0, check: 0, media: 0};
+  for (const pm of p.messages) {
+    const key = hash([room, pm.date, pm.time, pm.sender, pm.text].join('\u0001'));
+    if (known.has(key)) { r.dup++; continue; }
+    known.add(key);
+    const msg = {id: S.seq++, key, room, mode: opts.mode, date: pm.date, time: pm.time, sender: pm.sender, text: pm.text, status: ''};
+    S.messages.push(msg);
+    r.added++;
+    r.items += analyze(msg);
+    if (msg.status in r) r[msg.status]++;
+  }
+  return r;
+}
+
+function report(results) {
+  const lines = [];
+  let warn = false;
+  for (const r of results) {
+    if (!r.total) { lines.push(`⚠️ ${r.room}: 읽을 내용이 없어요.`); warn = true; continue; }
+    if (!r.added) { lines.push(`ℹ️ ${r.room}: 새 메시지가 없어요. ${r.dup}건 모두 이미 넣은 메시지라 다시 넣지 않았어요.`); continue; }
+    lines.push(`✅ ${r.room}: 새 메시지 ${r.added}건 중 ${r.used}건에서 품목 ${r.items}줄을 찾았어요.`);
+    if (!r.matched) lines.push('· 카톡 형식(이름·시간)이 없어서 붙여넣은 내용 전체를 메시지 1건으로 보고 정리했어요.');
+    if (r.dup) lines.push(`· 이미 넣었던 메시지 ${r.dup}건은 다시 넣지 않았어요.`);
+    if (r.check) { lines.push(`· 🟡 발주·보고 같은데 수량을 못 찾은 메시지 ${r.check}건이 있어요 → ‘건너뛴 메시지’ 탭에서 확인해 주세요.`); warn = true; }
+    if (r.media) lines.push(`· 📷 사진·파일 ${r.media}건은 글자가 아니라 정리하지 못했어요. 카톡에서 직접 확인해 주세요.`);
+  }
+  say('#status', lines, warn);
+}
+
+/* ---------- 3) 화면 ---------- */
+const needsCheck = r => !String(r.item).trim() || !String(r.qty).trim() || r.type === '미분류';
+const msgById = () => new Map(S.messages.map(m => [m.id, m]));
+function inFilter(x, hay) {
+  return (!ui.from || x.date >= ui.from) && (!ui.to || x.date <= ui.to) && (!ui.room || x.room === ui.room) &&
+    (!ui.q || hay.toLowerCase().includes(ui.q.toLowerCase()));
+}
+const byTime = (a, b) => (a.date + a.time).localeCompare(b.date + b.time) || a.room.localeCompare(b.room) || a.id - b.id;
+
+function viewRows() {
+  const mm = msgById();
+  return S.rows.filter(r => (!ui.type || r.type === ui.type) &&
+    inFilter(r, [r.item, r.sender, r.room, r.note, (mm.get(r.msgId) || {}).text].join(' '))).sort(byTime);
+}
+function viewSum() {
+  const g = new Map();
+  for (const r of viewRows()) {
+    const item = String(r.item).trim().replace(/\s+/g, ' '), unit = String(r.unit).trim();
+    const k = [r.type, item, unit].join('\u0001');
+    const x = g.get(k) || {type: r.type, item, unit, sum: 0, unknown: 0, count: 0, rooms: new Set()};
+    const q = String(r.qty).trim();
+    if (/^\d+(?:\.\d+)?$/.test(q)) x.sum += parseFloat(q); else x.unknown++;
+    x.count++; x.rooms.add(r.room);
+    g.set(k, x);
+  }
+  return [...g.values()].sort((a, b) => TYPES.indexOf(a.type) - TYPES.indexOf(b.type) || a.item.localeCompare(b.item, 'ko'));
+}
+function viewSkip() {
+  const rank = {check: 0, chat: 1, media: 2};
+  return S.messages.filter(m => m.status in rank && inFilter(m, [m.text, m.sender, m.room].join(' ')))
+    .sort((a, b) => rank[a.status] - rank[b.status] || byTime(a, b));
+}
+const fmt = n => String(Math.round(n * 100) / 100);
+const sumQty = x => x.count === x.unknown ? '' : fmt(x.sum);
+const sumNote = x => x.unknown ? `수량 확인 필요 ${x.unknown}건` : '';
+
+function render() {
+  // 방 목록
+  const rooms = [...new Set(S.messages.map(m => m.room).concat(S.rows.map(r => r.room)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ko'));
+  if (ui.room && !rooms.includes(ui.room)) ui.room = '';
+  $('#froom').innerHTML = '<option value="">전체</option>' + rooms.map(r => `<option${r === ui.room ? ' selected' : ''}>${h(r)}</option>`).join('');
+
+  const rows = viewRows(), sums = viewSum(), skips = viewSkip();
+  $('#c-rows').textContent = ` ${rows.length}`;
+  $('#c-sum').textContent = ` ${sums.length}`;
+  $('#c-skip').textContent = ` ${skips.length}`;
+  $$('.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === ui.tab)));
+  $('#rowActions').hidden = ui.tab !== 'rows';
+
+  const view = $('#view');
+  const legend = $('#legend');
+  if (ui.tab === 'rows') {
+    legend.innerHTML = '<i></i>노란 줄은 품목·수량·구분을 한 번 확인해 주세요. 칸을 누르면 바로 고칠 수 있어요. 원문을 누르면 펼쳐져요.';
+    if (!rows.length) { view.innerHTML = `<div class="empty">${S.rows.length ? '조건에 맞는 품목이 없어요. 기간이나 필터를 바꿔 보세요.' : '아직 정리된 품목이 없어요. 위 칸에 카톡 대화를 붙여넣고 [정리하기]를 눌러 주세요.'}</div>`; return; }
+    const mm = msgById();
+    view.innerHTML = '<table><thead><tr><th>날짜</th><th>시간</th><th>방</th><th>보낸사람</th><th>구분</th><th>품목</th><th>수량</th><th>단위</th><th>비고</th><th>원문</th><th><span class="sr">삭제</span></th></tr></thead><tbody>' +
+      rows.map(r => rowHTML(r, mm.get(r.msgId))).join('') + '</tbody></table>';
+  } else if (ui.tab === 'sum') {
+    legend.innerHTML = '같은 구분·품목·단위끼리 더했어요. 품목 이름이 조금씩 다르면 ‘품목 목록’에서 이름을 맞춰 주세요.';
+    if (!sums.length) { view.innerHTML = '<div class="empty">합계를 낼 품목이 없어요.</div>'; return; }
+    view.innerHTML = '<table><thead><tr><th>구분</th><th>품목</th><th>합계 수량</th><th>단위</th><th>건수</th><th>방</th><th>비고</th></tr></thead><tbody>' +
+      sums.map(x => `<tr class="${x.unknown || !x.item ? 'check' : ''}"><td>${h(x.type)}</td><td>${h(x.item) || '<span class="hint">(품목 없음)</span>'}</td><td class="num">${sumQty(x)}</td><td>${h(x.unit)}</td><td class="num">${x.count}</td><td>${h([...x.rooms].join(', '))}</td><td>${h(sumNote(x))}</td></tr>`).join('') +
+      '</tbody></table>';
+  } else {
+    legend.innerHTML = '<i></i>노란 줄은 발주·보고 단어는 있는데 수량을 못 찾은 메시지예요. 필요하면 [표에 추가]를 눌러 직접 채워 주세요.';
+    if (!skips.length) { view.innerHTML = '<div class="empty">건너뛴 메시지가 없어요.</div>'; return; }
+    const LIMIT = 500;
+    const tag = {check: '<span class="tag check">확인 필요</span>', chat: '<span class="tag">일반 대화</span>', media: '<span class="tag">사진·파일</span>'};
+    view.innerHTML = '<table><thead><tr><th>상태</th><th>날짜</th><th>시간</th><th>방</th><th>보낸사람</th><th>내용</th><th><span class="sr">추가</span></th></tr></thead><tbody>' +
+      skips.slice(0, LIMIT).map(m => `<tr class="${m.status === 'check' ? 'check' : ''}"><td class="meta">${tag[m.status]}</td><td class="meta">${h(m.date)}</td><td class="meta">${h(m.time)}</td><td class="meta">${h(m.room)}</td><td class="meta">${h(m.sender)}</td><td class="src"><div class="clamp" tabindex="0" role="button" aria-label="원문 펼치기">${h(m.text)}</div></td><td><button class="small" data-addmsg="${m.id}">표에 추가</button></td></tr>`).join('') +
+      '</tbody></table>' + (skips.length > LIMIT ? `<div class="empty">앞의 ${LIMIT}건만 보여 드려요. 기간을 좁혀 보세요.</div>` : '');
+  }
+}
+function rowHTML(r, msg) {
+  const manual = !r.msgId;
+  const input = (f, cls, ph = '') => `<td class="${cls}"><input data-id="${r.id}" data-f="${f}" value="${h(r[f])}" aria-label="${LABEL[f]}" placeholder="${ph}"></td>`;
+  const meta = f => manual ? input(f, 'meta', LABEL[f]) : `<td class="meta">${h(r[f])}</td>`;
+  return `<tr class="${needsCheck(r) ? 'check' : ''}">${meta('date')}${meta('time')}${meta('room')}${meta('sender')}` +
+    `<td class="type"><select data-id="${r.id}" data-f="type" aria-label="구분">${TYPES.map(t => `<option${t === r.type ? ' selected' : ''}>${t}</option>`).join('')}</select></td>` +
+    input('item', 'item', '품목 입력') + input('qty', 'qty') + input('unit', 'unit') + input('note', 'note') +
+    `<td class="src">${msg ? `<div class="clamp" tabindex="0" role="button" aria-label="원문 펼치기">${h(msg.text)}</div>` : ''}</td>` +
+    `<td><button class="small" data-del="${r.id}" aria-label="이 줄 삭제" title="이 줄 삭제">✕</button></td></tr>`;
+}
+
+/* ---------- 4) 내보내기 ---------- */
+function currentTable() {
+  if (ui.tab === 'sum') {
+    return {name: 'summary', header: ['구분', '품목', '합계 수량', '단위', '건수', '방', '비고'],
+      rows: viewSum().map(x => [x.type, x.item, sumQty(x), x.unit, x.count, [...x.rooms].join(', '), sumNote(x)])};
+  }
+  if (ui.tab === 'skip') {
+    const st = {check: '확인 필요', chat: '일반 대화', media: '사진·파일'};
+    return {name: 'skipped', header: ['상태', '날짜', '시간', '방', '보낸사람', '내용'],
+      rows: viewSkip().map(m => [st[m.status], m.date, m.time, m.room, m.sender, m.text])};
+  }
+  const mm = msgById();
+  return {name: 'list', header: ['날짜', '시간', '방', '보낸사람', '구분', '품목', '수량', '단위', '비고', '원문'],
+    rows: viewRows().map(r => [r.date, r.time, r.room, r.sender, r.type, r.item, r.qty, r.unit, r.note, (mm.get(r.msgId) || {}).text || ''])};
+}
+const safeCell = c => { c = String(c ?? ''); return /^[=+\-@\t\r]/.test(c) && !/^-?\d+(?:\.\d+)?$/.test(c) ? "'" + c : c; };
+function toCSV(t) {
+  return '\uFEFF' + [t.header, ...t.rows].map(r => r.map(c => { c = safeCell(c); return /[",\n\r]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(',')).join('\r\n');
+}
+const toTSV = t => [t.header, ...t.rows].map(r => r.map(c => safeCell(c).replace(/[\t\r\n]+/g, ' ')).join('\t')).join('\n');
+
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch (e2) { ok = false; }
+    ta.remove(); return ok;
+  }
+}
+function aiPrompt() {
+  const msgs = S.messages.filter(m => m.status !== 'media' && inFilter(m, [m.text, m.sender, m.room].join(' '))).sort(byTime);
+  if (!msgs.length) return '';
+  const lines = msgs.map(m => `${m.date} ${m.time} [${m.room}] ${m.sender || '-'}: ${m.text.replace(/\n+/g, ' / ')}`);
+  return [
+    '아래는 카카오톡 단톡방 대화입니다. 발주와 품목보고 내용만 골라 표로 정리해 주세요.',
+    '',
+    '[정리 규칙]',
+    '1. 열: 날짜 | 시간 | 방 | 보낸사람 | 구분(발주/품목보고) | 품목 | 수량 | 단위 | 비고',
+    '2. 한 메시지에 품목이 여러 개면 품목마다 한 줄씩 쓰기',
+    '3. 인사, 잡담, "네 알겠습니다" 같은 답장은 빼기',
+    '4. 품목이나 수량이 애매하면 추측하지 말고 비고에 "확인필요"라고 쓰기',
+    '5. 표 아래에 구분·품목·단위별 수량 합계 표를 하나 더 만들기',
+    '6. 엑셀에 바로 붙여넣을 수 있는 표 형식으로 답하기',
+    '',
+    `[대화 ${msgs.length}건]`,
+    ...lines
+  ].join('\n');
+}
+
+/* ---------- 5) 이벤트 ---------- */
+function resetFilters() {
+  Object.assign(ui, {from: '', to: '', type: '', room: '', q: ''});
+  $('#from').value = ''; $('#to').value = ''; $('#ftype').value = ''; $('#q').value = '';
+  $$('[data-range]').forEach(b => b.classList.toggle('on', b.dataset.range === 'all'));
+}
+function opts(extra = {}) {
+  return {room: $('#room').value.trim(), mode: $('#mode').value, baseDate: $('#baseDate').value || today(), ...extra};
+}
+function afterIngest(results) {
+  saveNow(); resetFilters(); ui.tab = 'rows'; render(); report(results);
+  $('#room').value = '';
+}
+
+$('#run').addEventListener('click', () => {
+  const raw = $('#raw').value;
+  if (!raw.trim()) { say('#status', ['붙여넣은 내용이 없어요. 카톡 대화를 복사해서 위 칸에 붙여넣어 주세요.'], true); $('#raw').focus(); return; }
+  const r = ingest(raw, opts());
+  $('#raw').value = '';
+  afterIngest([r]);
+});
+$('#raw').addEventListener('input', () => {
+  if ($('#room').value.trim()) return;
+  const head = $('#raw').value.slice(0, 300).split('\n').map(l => l.match(RE.header)).find(Boolean);
+  if (head) $('#room').value = head[1].trim();
+});
+
+async function readFile(file) {
+  const buf = new Uint8Array(await file.arrayBuffer());
+  if (buf[0] === 0xFF && buf[1] === 0xFE) return new TextDecoder('utf-16le').decode(buf);
+  if (buf[0] === 0xFE && buf[1] === 0xFF) return new TextDecoder('utf-16be').decode(buf);
+  try { return new TextDecoder('utf-8', {fatal: true}).decode(buf); }
+  catch (e) { try { return new TextDecoder('euc-kr').decode(buf); } catch (e2) { return new TextDecoder().decode(buf); } }
+}
+async function handleFiles(list) {
+  const files = [...list].filter(f => /\.(txt|csv)$/i.test(f.name) || /^text\//.test(f.type));
+  if (!files.length) { say('#status', ['.txt 또는 .csv 파일만 넣을 수 있어요.'], true); return; }
+  const typed = $('#room').value.trim();
+  const results = [];
+  for (const f of files) {
+    const text = await readFile(f);
+    const p = parseChat(text, '');
+    const room = (files.length === 1 && typed) || p.room || f.name.replace(/\.[^.]+$/, '');
+    results.push(ingest(text, opts({room})));
+  }
+  afterIngest(results);
+}
+$('#pick').addEventListener('click', () => $('#file').click());
+$('#file').addEventListener('change', e => { if (e.target.files.length) handleFiles(e.target.files); e.target.value = ''; });
+const drop = $('#drop');
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { if ([...e.dataTransfer.types].includes('Files')) { e.preventDefault(); drop.classList.add('over'); } }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, () => drop.classList.remove('over')));
+drop.addEventListener('drop', e => { if (e.dataTransfer.files.length) { e.preventDefault(); handleFiles(e.dataTransfer.files); } });
+
+// 필터
+$$('[data-range]').forEach(b => b.addEventListener('click', () => {
+  const k = b.dataset.range;
+  const range = {today: [today(), today()], yesterday: [today(-1), today(-1)], week: [today(-6), today()], all: ['', '']}[k];
+  [ui.from, ui.to] = range;
+  $('#from').value = ui.from; $('#to').value = ui.to;
+  $$('[data-range]').forEach(x => x.classList.toggle('on', x === b));
+  render();
+}));
+const clearQuick = () => $$('[data-range]').forEach(x => x.classList.remove('on'));
+$('#from').addEventListener('change', e => { ui.from = e.target.value; clearQuick(); render(); });
+$('#to').addEventListener('change', e => { ui.to = e.target.value; clearQuick(); render(); });
+$('#ftype').addEventListener('change', e => { ui.type = e.target.value; render(); });
+$('#froom').addEventListener('change', e => { ui.room = e.target.value; render(); });
+let qTimer = 0;
+$('#q').addEventListener('input', e => { clearTimeout(qTimer); qTimer = setTimeout(() => { ui.q = e.target.value.trim(); render(); }, 200); });
+$$('.tabs button').forEach(b => b.addEventListener('click', () => { ui.tab = b.dataset.tab; render(); }));
+
+// 표 안에서 고치기
+const view = $('#view');
+function onEdit(e) {
+  const el = e.target;
+  if (!el.dataset || !el.dataset.f) return;
+  const r = S.rows.find(x => x.id === +el.dataset.id);
+  if (!r) return;
+  r[el.dataset.f] = el.value;
+  el.closest('tr').classList.toggle('check', needsCheck(r));
+  save();
+}
+view.addEventListener('input', onEdit);
+view.addEventListener('change', e => { onEdit(e); if (e.target.dataset.f === 'type' || e.target.dataset.f === 'room') render(); });
+view.addEventListener('click', e => {
+  const clamp = e.target.closest('.clamp');
+  if (clamp) { clamp.classList.toggle('open'); return; }
+  const del = e.target.closest('[data-del]');
+  if (del) {
+    const id = +del.dataset.del;
+    const r = S.rows.find(x => x.id === id);
+    S.rows = S.rows.filter(x => x.id !== id);
+    if (r && r.msgId && !S.rows.some(x => x.msgId === r.msgId)) {
+      const m = S.messages.find(x => x.id === r.msgId);
+      if (m) m.status = classify(m.text) ? 'check' : 'chat';
+    }
+    save(); render(); return;
+  }
+  const add = e.target.closest('[data-addmsg]');
+  if (add) {
+    const m = S.messages.find(x => x.id === +add.dataset.addmsg);
+    if (!m) return;
+    const type = m.mode === 'order' ? '발주' : m.mode === 'report' ? '품목보고' : (classify(m.text) || '미분류');
+    S.rows.push({id: S.seq++, msgId: m.id, date: m.date, time: m.time, room: m.room, sender: m.sender, type, item: '', qty: '', unit: '', note: ''});
+    m.status = 'used';
+    save(); render();
+    say('#status2', [`‘${m.sender || m.room}’ 메시지를 품목 목록에 추가했어요. ‘품목 목록’ 탭에서 품목과 수량을 채워 주세요.`]);
+  }
+});
+view.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('clamp')) { e.preventDefault(); e.target.classList.toggle('open'); }
+});
+$('#addRow').addEventListener('click', () => {
+  const r = {id: S.seq++, msgId: null, date: ui.to || ui.from || today(), time: '', room: ui.room, sender: '', type: ui.type || '발주', item: '', qty: '', unit: '', note: ''};
+  S.rows.push(r);
+  ui.q = ''; $('#q').value = '';
+  save(); render();
+  const el = view.querySelector(`input[data-id="${r.id}"][data-f="item"]`);
+  if (el) { el.scrollIntoView({block: 'center'}); el.focus(); }
+});
+
+// 내보내기
+$('#csv').addEventListener('click', () => {
+  const t = currentTable();
+  if (!t.rows.length) { say('#status2', ['내보낼 내용이 없어요. 기간이나 필터를 확인해 주세요.'], true); return; }
+  const blob = new Blob([toCSV(t)], {type: 'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `kakao-order_${t.name}_${today().replace(/-/g, '')}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  say('#status2', [`✅ ${t.rows.length}줄을 엑셀 파일(${a.download})로 저장했어요. 다운로드 폴더를 확인해 주세요.`]);
+});
+$('#copy').addEventListener('click', async () => {
+  const t = currentTable();
+  if (!t.rows.length) { say('#status2', ['복사할 내용이 없어요. 기간이나 필터를 확인해 주세요.'], true); return; }
+  const ok = await copyText(toTSV(t));
+  say('#status2', [ok ? `✅ ${t.rows.length}줄을 복사했어요. 엑셀이나 구글시트의 빈 칸을 누르고 Ctrl+V 하세요.` : '복사하지 못했어요. [엑셀 파일로 저장]을 써 주세요.'], !ok);
+});
+$('#ai').addEventListener('click', async () => {
+  const text = aiPrompt();
+  if (!text) { say('#status2', ['맡길 대화가 없어요. 기간이나 방 필터를 확인해 주세요.'], true); return; }
+  const ok = await copyText(text);
+  say('#status2', [ok ? '✅ 정리 규칙과 대화를 복사했어요. Claude나 ChatGPT 대화창에 붙여넣고 보내 주세요.' : '복사하지 못했어요. 브라우저에서 복사 권한을 허용해 주세요.'], !ok);
+});
+
+// 설정
+function fillSettings() {
+  $('#sOrder').value = S.settings.orderWords;
+  $('#sReport').value = S.settings.reportWords;
+  $('#sUnits').value = S.settings.extraUnits;
+}
+$('#saveSettings').addEventListener('click', () => {
+  S.settings = {orderWords: $('#sOrder').value, reportWords: $('#sReport').value, extraUnits: $('#sUnits').value};
+  compile(); saveNow();
+  say('#status3', ['✅ 설정을 저장했어요. 앞으로 넣는 대화부터 적용돼요.']);
+});
+$('#resetSettings').addEventListener('click', () => { S.settings = {...DEFAULTS}; fillSettings(); compile(); saveNow(); say('#status3', ['기본값으로 되돌렸어요.']); });
+$('#reparse').addEventListener('click', () => {
+  if (!S.messages.length) { say('#status3', ['저장된 대화가 없어요.']); return; }
+  if (!confirm('저장된 대화를 지금 설정으로 다시 정리할까요?\n표에서 직접 고친 내용과 직접 추가한 줄은 사라져요.')) return;
+  S.rows = [];
+  compile();
+  let n = 0;
+  for (const m of S.messages) n += analyze(m);
+  saveNow(); render();
+  say('#status3', [`✅ 대화 ${S.messages.length}건을 다시 정리해서 품목 ${n}줄을 찾았어요.`]);
+});
+$('#clearAll').addEventListener('click', () => {
+  if (!confirm('넣은 대화와 정리한 표를 모두 지울까요? 되돌릴 수 없어요.\n(필요하면 먼저 엑셀 파일로 저장해 두세요.)')) return;
+  S.messages = []; S.rows = [];
+  saveNow(); resetFilters(); render();
+  say('#status', []); say('#status2', []);
+  say('#status3', ['모든 데이터를 지웠어요.']);
+});
+
+/* ---------- 시작 ---------- */
+load();
+compile();
+fillSettings();
+$('#baseDate').value = today();
+render();
+
+window.KakaoOrder = {parseChat, extractItems, classify};
+})();
+</script>
+</body>
+</html>
